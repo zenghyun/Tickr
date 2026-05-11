@@ -1,0 +1,261 @@
+# Tickr — 모의투자 앱 MVP 구현 계획
+
+## Context
+
+FE 개발자(React/Next 경험, RN/BE 경험 없음)가 본인 학습 + 지인 닫힌 베타용으로 만들고자 하는 **모의투자(가상 포트폴리오) 앱**.
+
+**왜 모의투자인가** — 한국에서 실 증권사 계좌 통합(도미노/뱅크샐러드 방식)은 마이데이터 라이선스(자본금 5억+, 금융위 허가)가 필요해 개인 개발자에겐 불가능. 대신 한국투자증권(KIS) Developers OpenAPI를 사용하면 **개발자 본인 키 1개로 모든 사용자에게 실시간 시세 제공이 합법적으로 가능**하므로, 사용자별 증권 계좌 없이도 "실제 시세 기반의 가상 매매" 앱을 만들 수 있다.
+
+**최종 목표** — 사용자가 로그인 → 종목 검색 → 실시간 차트 보기 → 시장가 가상매매 → 보유종목 평가금액이 실시간 시세에 따라 변동되는 흐름을 완전한 모바일 앱으로 제공. 1단계는 핵심 포트폴리오/체결/실시간 시세, 2단계에서 AI 분석(정보성) 추가.
+
+## 확정된 의사결정
+
+| 항목 | 결정 |
+|---|---|
+| 앱 유형 | 모의투자 (자체 가상 포트폴리오, L1 시장가 즉시체결) |
+| 시세 데이터 | 한국투자증권 KIS Developers OpenAPI (REST + WebSocket) |
+| 사용자별 증권 계좌 | 불필요. 개발자 KIS 키 1개로 전체 서비스 |
+| 모바일 | Expo (iOS + Android) |
+| 백엔드 | Supabase(Auth+Postgres+RLS) + NestJS 1대 |
+| AI | 1단계 제외 → 2단계 정보성 분석만 |
+| 배포 | TestFlight + Android Internal Track (닫힌 베타) |
+| 언어 | TypeScript 전체 |
+
+## A. 아키텍처
+
+```
+┌────────── Expo App (iOS/Android) ──────────┐
+│ Supabase Auth SDK │ React Query │ WS Client │
+└──────┬──────────────┬─────────────┬─────────┘
+       │JWT           │JWT(Bearer)  │JWT(query)
+       ▼              ▼             ▼
+┌──────────────┐  ┌────────────────────────────┐
+│  Supabase    │◄─┤      NestJS API (Railway)  │
+│  Auth        │  │  Auth Guard │ Trade Svc    │
+│  Postgres    │  │  KIS REST   │ WS Hub       │
+│  RLS         │  │  + token$   │ (fan-out)    │
+└──────────────┘  └──────┬──────────────┬──────┘
+                         │REST           │WS(1)
+                         ▼               ▼
+                   ┌────────────────────────────┐
+                   │  KIS Developers OpenAPI    │
+                   └────────────────────────────┘
+```
+
+- **실시간 시세**: KIS WS 1개 → NestJS WsHub → 다수 Expo 클라이언트에 fan-out
+- **매매 체결**: Expo → NestJS → KIS 현재가 조회 → Postgres `execute_trade()` 함수로 단일 트랜잭션
+
+## B. 데이터 모델 (Supabase Postgres)
+
+| 테이블 | 핵심 컬럼 | RLS |
+|---|---|---|
+| `profiles` | id(uuid=auth.users.id), email, nickname | select/update: id = auth.uid() |
+| `accounts` | id, user_id, currency('KRW'\|'USD'), cash_balance numeric(20,4) | all: user_id = auth.uid() |
+| `holdings` | id, user_id, symbol, market('KR'\|'US'), quantity, avg_price, UNIQUE(user_id, symbol) | all: user_id = auth.uid() |
+| `trades` | id, user_id, symbol, side('BUY'\|'SELL'), quantity, price, amount, executed_at | select/insert만, update/delete 금지 |
+| `watchlist` | id, user_id, symbol, market, UNIQUE(user_id, symbol) | all: user_id = auth.uid() |
+| `symbols` | symbol(PK), market, name_ko, name_en, exchange, currency, is_active | select: authenticated, write: service_role |
+| `kis_tokens` | id=1(single row), token, expires_at | service_role만 |
+| `allowed_emails` | email(PK) | service_role만 (화이트리스트) |
+
+체결/잔고 변경은 모두 NestJS의 `service_role` 키로 트랜잭션 수행. RLS는 안전망.
+
+## C. 디렉터리 구조 (pnpm workspaces + turbo 모노레포)
+
+```
+tickr/
+├── pnpm-workspace.yaml, turbo.json, .env.example
+├── apps/
+│   ├── mobile/                          # Expo + expo-router
+│   │   ├── app.json, eas.json
+│   │   ├── app/
+│   │   │   ├── (auth)/login.tsx
+│   │   │   ├── (tabs)/index.tsx         # 포트폴리오
+│   │   │   ├── (tabs)/search.tsx
+│   │   │   ├── (tabs)/history.tsx
+│   │   │   └── symbol/[symbol].tsx
+│   │   └── src/
+│   │       ├── api/        # axios + react-query hooks
+│   │       ├── ws/         # useTickStream
+│   │       ├── stores/     # zustand
+│   │       ├── components/ # Chart, OrderSheet, HoldingRow
+│   │       └── lib/supabase.ts
+│   └── api/                             # NestJS
+│       └── src/
+│           ├── auth/                    # JWT Guard
+│           ├── kis/                     # service, token cache, ws client
+│           ├── symbols/                 # controller + cron
+│           ├── quote/                   # REST 현재가/차트
+│           ├── trade/                   # 체결 로직
+│           ├── ws/                      # WsHub
+│           └── supabase/                # service_role client
+└── packages/shared/
+    └── src/{schemas, ws-protocol.ts, kis-types.ts}
+```
+
+**왜 모노레포**: zod 스키마/TS 타입을 FE·BE 공유 → KIS 응답 검증과 trades DTO를 한 곳에서 관리.
+
+## D. 핵심 기술 선택
+
+### 모바일
+- 라우팅: **expo-router v3** (Next App Router 유사 — FE 학습곡선↓)
+- 서버 상태: **@tanstack/react-query v5**
+- 클라이언트 상태: **zustand**
+- 폼: **react-hook-form + zod**
+- 차트: **TradingView Lightweight Charts** (Apache-2.0 무료, 금융 차트 표준) + `react-native-webview` 임베드. RN→WebView는 `postMessage`로 WS tick 전달, WebView→RN은 캔들 hover/탭 콜백 정도만. 보조지표(MA/RSI/MACD)는 라이브러리 내장 또는 직접 계산 후 차트 시리즈로 추가
+- 스타일: **NativeWind v4 단독으로 시작** (Tailwind 문법 익숙). 컴포넌트가 부족하면 tamagui 추가
+- WS: **native WebSocket** (RN 내장, socket.io는 background 이슈)
+- 인증: `@supabase/supabase-js` + `expo-secure-store` 어댑터
+
+### 백엔드
+- 프레임워크: **NestJS** (DI/Guard가 BE 첫경험자에 친절)
+- WS: **`ws` + `@nestjs/platform-ws`** (KIS WS가 raw WS이므로 프로토콜 일치)
+- HTTP: **axios + axios-retry** (KIS 401 시 토큰 재발급)
+- 검증: **zod + nestjs-zod** (FE와 스키마 공유)
+- 캐시: **node-cache + Postgres** (Redis는 MVP에 불필요)
+- 스케줄: **@nestjs/schedule** cron (BullMQ 불필요)
+- 트랜잭션: **Postgres plpgsql 함수 `execute_trade()`** (Supabase JS는 BEGIN/COMMIT 직접 지원 X)
+- Supabase: `@supabase/supabase-js` w/ service_role
+
+### 인프라
+- Supabase 무료티어
+- NestJS: **Railway** (git push 배포, WS 지속 연결 안정)
+- 모바일 배포: Expo EAS Build + Submit
+
+## E. KIS API 통합
+
+**등록 절차 (Day 1~2, 승인까지 1~2일):**
+1. KIS Developers 가입 → 모의투자 계좌 개설(인증용)
+2. OpenAPI 신청 → App Key/Secret (실전/모의 분리 발급)
+3. 첫 토큰: `POST /oauth2/tokenP` → `access_token` (24h)
+
+**토큰 캐싱**: 메모리 우선 → 만료 10분 전 갱신, Postgres `kis_tokens`에 백업 (재시작 대비).
+
+**종목 마스터 동기화**: `@Cron('0 6 * * 1-5')` 평일 06:00 → upsert `symbols` (MVP는 주요 ~3000개).
+
+**WS 동적 구독** (KIS WS 동시 41개 제한):
+```
+SubscriberMap: Map<symbol, Set<clientId>>
+
+클라이언트 진입 → server.subscribe(symbol, clientId)
+  if map[symbol] empty → KIS WS subscribe
+  map[symbol].add(clientId)
+
+클라이언트 이탈 → server.unsubscribe(symbol, clientId)
+  map[symbol].delete(clientId)
+  if map[symbol] empty → KIS WS unsubscribe
+```
+
+**클라이언트↔서버 WS 프로토콜** (`packages/shared/src/ws-protocol.ts`):
+```ts
+// C→S: { type:'subscribe', symbols:['005930'] } | { type:'unsubscribe', ... } | { type:'ping' }
+// S→C: { type:'tick', symbol, price, ts } | { type:'pong' } | { type:'error', code }
+```
+연결 시 JWT는 `?token=...` 쿼리로 전달 → Gateway에서 검증.
+
+## F. 매매 체결 로직
+
+```
+POST /trades { symbol, side, quantity }
+  1. JWT → user_id
+  2. price = await kis.getQuote(symbol)        // 실패 502
+  3. supabase.rpc('execute_trade', { ... })
+       plpgsql 내부 단일 트랜잭션:
+         LOCK accounts FOR UPDATE
+         BUY:  cash >= amount 검증 → cash -= amount
+               holdings upsert:
+                 new_qty = old_qty + qty
+                 new_avg = (old_avg*old_qty + price*qty) / new_qty
+         SELL: holdings.qty >= qty 검증 → cash += amount
+               qty == sell_qty 이면 holding 삭제, 아니면 qty 감소(avg_price 유지)
+         INSERT trades
+         RETURN updated holding + cash
+  4. 응답
+```
+
+**에러**: `INSUFFICIENT_CASH`, `INSUFFICIENT_QTY`, `QUOTE_UNAVAILABLE` (502). 장 마감 검증은 MVP 제외.
+
+## G. 실시간 시세 fan-out
+
+```
+KisWsClient (single connection)
+  └─ on('tick') → hub.broadcast(symbol, tick)
+
+WsHub
+  clients: Map<clientId, WebSocket>
+  subs:    Map<symbol, Set<clientId>>
+  broadcast(symbol, tick):
+    for cid of subs[symbol]: clients[cid].send({type:'tick', ...})
+```
+
+**복구**: KIS WS 끊김 → 지수 백오프(1s→30s) → 재연결 후 `subs` 전체 재구독. 클라이언트 끊김 → 재연결 시 현재 화면 심볼 set 재전송. 30초 ping/pong.
+
+## H. 인증/보안
+
+- 모든 비즈니스 엔드포인트: `@UseGuards(SupabaseJwtGuard)` (`jose`로 `SUPABASE_JWT_SECRET` 검증)
+- 모든 사용자 테이블 RLS ENABLE
+- KIS 키: Railway secrets만, 클라이언트 번들 절대 금지
+- 닫힌 베타: profiles INSERT trigger에서 `auth.email()`이 `allowed_emails`에 없으면 raise
+
+## I. 단계별 로드맵
+
+### 1단계 MVP (총 7주)
+
+| 주 | 산출물 |
+|---|---|
+| **W1** | pnpm/turbo 모노레포 + Supabase 프로젝트 + Expo·NestJS 빈 부팅 + `packages/shared` 셋업 |
+| **W2** | Supabase Auth (이메일 + Google) + profiles trigger + mobile (auth) flow + NestJS JWT Guard |
+| **W3** | **KIS 등록 신청 (W1과 병렬)** + 토큰 캐시 + `/symbols/search` + 마스터 cron + 검색 화면 |
+| **W4** | `/quote/:symbol` REST + `/quote/:symbol/candles?interval=D\|1m` + 종목 상세 + TradingView Lightweight Charts 캔들(WebView 임베드) |
+| **W5** | NestJS WsGateway + WsHub + KisWsClient + 종목 상세 실시간 갱신 + 동적 구독 |
+| **W6** | accounts seed(KRW 1억/USD 100k) + `execute_trade` plpgsql + `POST /trades` + 매수/매도 시트 + 보유종목/거래내역 |
+| **W7** | 합산 평가금액(실시간) + 국내/해외 분리 뷰 + 에러/빈상태 + EAS Build + TestFlight/Internal Track 업로드 + 화이트리스트 |
+
+### 2단계 (AI 분석)
+- `POST /ai/analyze/:symbol` (OpenAI/Anthropic API 프록시)
+- 입력: 최근 일/분봉 + 뉴스(네이버 뉴스 또는 KIS 뉴스)
+- 출력: 기술적 지표 해석, 뉴스 요약, **면책 문구 필수**
+- `rate_limits` 테이블로 일일 호출 한도
+
+## J. 검증/테스트
+
+**E2E 시나리오 (1단계 완료 정의)**:
+1. 신규 가입 → 가상현금 1억 KRW seed 확인
+2. 005930 검색 → 상세 진입 → 캔들 + 실시간 현재가 1초 내 갱신
+3. 10주 매수 → 보유종목 표시, avg_price = 체결가, cash 감소
+4. 동일 종목 추가 10주 매수 → 평단가 가중평균 정확 재계산
+5. 5주 매도 → 잔량 15주, cash 증가, 거래내역 BUY×2/SELL×1
+
+**단위 테스트 (Jest)**:
+- `trade.service.spec.ts`: 평단가 재계산 4케이스 (초기/추가매수/일부매도/전량매도)
+- `kis-token.cache.spec.ts`: 만료 10분 전 갱신
+- DB 함수: Supabase local + service_role 키로 트랜잭션 시나리오
+
+## K. 위험요소 & 미해결
+
+| 위험 | 대응 |
+|---|---|
+| KIS WS 동시 41개 제한 | ~10명까지 안전. 50명 임계 — LRU 우선 해제 |
+| KIS REST 한도 (모의 2/s, 실전 20/s) | 활성 심볼은 WS tick 마지막값 캐시 → REST 스킵 |
+| RN 백그라운드 WS 끊김(iOS 30s) | `AppState` active 복귀 시 재연결 + 재구독 |
+| 상장/폐지/티커 변경 | 일일 sync에서 `is_active=false`, 보유분 표시만 허용 매수 차단 |
+| 개인정보처리방침 | Notion 공개 페이지 1장 (TestFlight 심사용 필수) |
+| 시세 데이터 라이선스 | 베타 참가자 사전 고지, 외부 공개 시 재검토 |
+
+## Critical Files
+
+- `/Users/mz01-zenghyun/Documents/Tickr/packages/shared/src/ws-protocol.ts` — WS 프로토콜 단일 출처
+- `/Users/mz01-zenghyun/Documents/Tickr/apps/api/src/trade/trade.service.ts` — 체결 진입점
+- `/Users/mz01-zenghyun/Documents/Tickr/apps/api/src/kis/kis-ws.client.ts` — KIS WS 단일 연결
+- `/Users/mz01-zenghyun/Documents/Tickr/apps/api/src/ws/ws.gateway.ts` — fan-out Hub
+- `/Users/mz01-zenghyun/Documents/Tickr/apps/mobile/src/ws/useTickStream.ts` — 클라이언트 구독 hook
+- `/Users/mz01-zenghyun/Documents/Tickr/supabase/migrations/0001_init.sql` — 테이블 + RLS + `execute_trade()` 함수
+
+## 첫날 시작 순서 (Quick Start)
+
+1. **KIS Developer 신청 먼저** (승인 1~2일, 병렬로 진행)
+2. `pnpm create turbo@latest tickr` → `apps/mobile`, `apps/api`, `packages/shared` 구성
+3. `pnpm create expo apps/mobile` (with-router 템플릿) + `nest new apps/api`
+4. Supabase 프로젝트 생성 → SQL Editor에서 B절 테이블 + RLS + `execute_trade()` 함수 적용
+5. `.env.example`: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE`, `SUPABASE_JWT_SECRET`, `KIS_APP_KEY`, `KIS_APP_SECRET`, `KIS_BASE_URL`
+6. mobile에서 `supabase.auth.getSession()` 확인, api `GET /health` 호출 → W1 종료
