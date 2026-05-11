@@ -199,17 +199,18 @@ WsHub
 
 ## I. 단계별 로드맵
 
-### 1단계 MVP (총 7주)
+### 1단계 MVP (총 8주)
 
 | 주 | 산출물 |
 |---|---|
-| **W1** | pnpm/turbo 모노레포 + Supabase 프로젝트 + Expo·NestJS 빈 부팅 + `packages/shared` 셋업 |
-| **W2** | Supabase Auth (이메일 + Google) + profiles trigger + mobile (auth) flow + NestJS JWT Guard |
-| **W3** | **KIS 등록 신청 (W1과 병렬)** + 토큰 캐시 + `/symbols/search` + 마스터 cron + 검색 화면 |
-| **W4** | `/quote/:symbol` REST + `/quote/:symbol/candles?interval=D\|1m` + 종목 상세 + TradingView Lightweight Charts 캔들(WebView 임베드) |
-| **W5** | NestJS WsGateway + WsHub + KisWsClient + 종목 상세 실시간 갱신 + 동적 구독 |
-| **W6** | accounts seed(KRW 1억/USD 100k) + `execute_trade` plpgsql + `POST /trades` + 매수/매도 시트 + 보유종목/거래내역 |
-| **W7** | 합산 평가금액(실시간) + 국내/해외 분리 뷰 + 에러/빈상태 + EAS Build + TestFlight/Internal Track 업로드 + 화이트리스트 |
+| **W1** | pnpm/turbo 모노레포 + Expo·NestJS 빈 부팅 + `packages/shared` 셋업 |
+| **W2** | **Claude Code 워크플로 셋업** — 프로젝트 `CLAUDE.md`, `.claude/skills/`(`/tickr-screen` 등 커스텀 스킬), `.claude/agents/`(designer 프로젝트 맞춤 설정), Figma Make → designer 검토 워크플로 문서, GitHub Issues/Projects/Milestones/Labels/PR 템플릿 (Jira 대체) |
+| **W3** | Supabase Auth (이메일 + Google) + profiles trigger + mobile (auth) flow + NestJS JWT Guard |
+| **W4** | KIS 토큰 캐시 + `/symbols/search` + 마스터 cron + 검색 화면 |
+| **W5** | `/quote/:symbol` REST + `/quote/:symbol/candles?interval=D\|1m` + 종목 상세 + TradingView Lightweight Charts 캔들(WebView 임베드) |
+| **W6** | NestJS WsGateway + WsHub + KisWsClient + 종목 상세 실시간 갱신 + 동적 구독 |
+| **W7** | accounts seed(KRW 1억/USD 100k) + `execute_trade` plpgsql + `POST /trades` + 매수/매도 시트 + 보유종목/거래내역 |
+| **W8** | 합산 평가금액(실시간) + 국내/해외 분리 뷰 + 에러/빈상태 + EAS Build + TestFlight/Internal Track 업로드 + 화이트리스트 |
 
 ### 2단계 (AI 분석)
 - `POST /ai/analyze/:symbol` (OpenAI/Anthropic API 프록시)
