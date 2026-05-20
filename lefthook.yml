@@ -1,0 +1,80 @@
+# lefthook — Tickr git hooks
+# docs: https://github.com/evilmartian/lefthook
+#
+# 설치/활성화는 pnpm install 시 자동 (package.json prepare).
+# 수동 활성화: pnpm exec lefthook install
+# 임시 우회: LEFTHOOK=0 git commit ...  (필요 시에만)
+
+pre-commit:
+  parallel: true
+  commands:
+    typecheck:
+      # turbo가 변경되지 않은 워크스페이스는 캐시 사용 → 보통 1~2초
+      run: pnpm typecheck
+      stage_fixed: false
+      fail_text: "타입 에러 — 수정 후 다시 커밋하세요"
+
+    lint:
+      # 변경된 TS/TSX 파일이 있을 때만
+      glob: "*.{ts,tsx,js,jsx}"
+      # lint도 워크스페이스 별로 turbo가 캐시
+      run: pnpm lint
+      fail_text: "lint 에러 — 수정 후 다시 커밋하세요"
+
+    no-hardcoded-colors:
+      # apps/mobile/src 영역에서 hex 색상 금지 (.claude/rules/nativewind-tokens.md)
+      glob: "apps/mobile/src/**/*.{ts,tsx}"
+      run: |
+        if grep -nE "#[0-9A-Fa-f]{3,8}" {staged_files} 2>/dev/null; then
+          echo ""
+          echo "❌ hex 색상 발견 — tailwind.config.js 토큰 사용 필요"
+          echo "   .claude/rules/nativewind-tokens.md 참고"
+          exit 1
+        fi
+        exit 0
+      fail_text: "디자인 토큰 위반 — hex 대신 className 토큰 사용"
+
+    no-inline-querykey:
+      # entity 외부에서 인라인 queryKey 금지 (.claude/rules/react-query.md)
+      # entities/{e}/api/*.queries.ts에서는 허용
+      glob: "apps/mobile/src/{pages,widgets,features}/**/*.{ts,tsx}"
+      run: |
+        if grep -nE "queryKey:\s*\[" {staged_files} 2>/dev/null; then
+          echo ""
+          echo "❌ pages/widgets/features에서 인라인 queryKey 금지"
+          echo "   entities/{e}/api/{e}.queries.ts에 queryOptions 팩토리로 정의"
+          echo "   .claude/rules/react-query.md 참고"
+          exit 1
+        fi
+        exit 0
+      fail_text: "queryOptions 팩토리 패턴 위반"
+
+    no-rn-only-in-entity:
+      # entity/feature/widget/page에서 react-native/expo-* 직접 import 금지
+      # (.claude/rules/monorepo-boundary.md — RN-only 격리)
+      # 단, react-native의 view/text 같은 prim은 shared/ui에서만, entity는 shared/ui 경유
+      glob: "apps/mobile/src/{entities,features,widgets,pages}/**/*.{ts,tsx}"
+      run: |
+        # entity/feature에서 expo-secure-store/expo-haptics 등 직접 import 검사
+        # (react-native 코어는 일부 허용 — Pressable 등은 entity ui에서 흔히 사용)
+        if grep -nE "from ['\"]expo-(secure-store|haptics|router|web-browser|linking)['\"]" {staged_files} 2>/dev/null; then
+          echo ""
+          echo "❌ expo-* 모듈을 entity/feature/widget/page에서 직접 import 금지"
+          echo "   shared/lib/ 래퍼 경유 (.claude/rules/monorepo-boundary.md)"
+          exit 1
+        fi
+        exit 0
+      fail_text: "RN-only 모듈 격리 위반"
+
+pre-push:
+  parallel: true
+  commands:
+    build-shared:
+      # packages/shared가 build 통과해야 mobile/api가 import 가능
+      run: pnpm --filter @tickr/shared build
+      fail_text: "@tickr/shared 빌드 실패"
+
+# CI/특수 환경에서 우회 가능
+skip_output:
+  - meta
+  - skips
