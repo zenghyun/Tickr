@@ -13,9 +13,11 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean && rm -rf node_modules .turbo"
+    "clean": "turbo run clean && rm -rf node_modules .turbo",
+    "prepare": "lefthook install || true"
   },
   "devDependencies": {
+    "lefthook": "^2.1.8",
     "turbo": "^2.3.3",
     "typescript": "^5.6.3"
   }
