@@ -12,7 +12,9 @@ FE 개발자(React/Next 경험, RN/BE 경험 없음)가 본인 학습 + 지인 �
 
 | 항목 | 결정 |
 |---|---|
-| 앱 유형 | 모의투자 (자체 가상 포트폴리오, L1 시장가 즉시체결) |
+| 앱 유형 | 모의투자 (자체 가상 포트폴리오) — **시장가(MARKET) 즉시체결 + 지정가(LIMIT) 자체 매칭**. **호가창 표시 안 함** |
+| 매매 모델 | MARKET: 현재가 즉시 체결 / LIMIT: `pending_orders` 등록 → WS tick에서 가격 도달 시 자동 체결 |
+| 플랫폼 우선순위 | **앱 우선**, 향후 `apps/web` 확장 계획 (도메인 타입은 `@tickr/shared`에 통일, RN-only는 `shared/lib/` 격리) |
 | 시세 데이터 | 한국투자증권 KIS Developers OpenAPI (REST + WebSocket) |
 | 사용자별 증권 계좌 | 불필요. 개발자 KIS 키 1개로 전체 서비스 |
 | 모바일 | Expo (iOS + Android) |
@@ -52,7 +54,8 @@ FE 개발자(React/Next 경험, RN/BE 경험 없음)가 본인 학습 + 지인 �
 | `profiles` | id(uuid=auth.users.id), email, nickname | select/update: id = auth.uid() |
 | `accounts` | id, user_id, currency('KRW'\|'USD'), cash_balance numeric(20,4) | all: user_id = auth.uid() |
 | `holdings` | id, user_id, symbol, market('KR'\|'US'), quantity, avg_price, UNIQUE(user_id, symbol) | all: user_id = auth.uid() |
-| `trades` | id, user_id, symbol, side('BUY'\|'SELL'), quantity, price, amount, executed_at | select/insert만, update/delete 금지 |
+| `trades` | id, user_id, symbol, side('BUY'\|'SELL'), order_type('MARKET'\|'LIMIT'), quantity, price, amount, executed_at, pending_order_id(nullable) | select/insert만, update/delete 금지 |
+| `pending_orders` | id, user_id, symbol, side, quantity, limit_price, status('OPEN'\|'FILLED'\|'CANCELLED'), created_at, filled_at | select: user_id = auth.uid(), insert/update/delete는 service_role |
 | `watchlist` | id, user_id, symbol, market, UNIQUE(user_id, symbol) | all: user_id = auth.uid() |
 | `symbols` | symbol(PK), market, name_ko, name_en, exchange, currency, is_active | select: authenticated, write: service_role |
 | `kis_tokens` | id=1(single row), token, expires_at | service_role만 |
@@ -153,42 +156,101 @@ SubscriberMap: Map<symbol, Set<clientId>>
 ```
 연결 시 JWT는 `?token=...` 쿼리로 전달 → Gateway에서 검증.
 
-## F. 매매 체결 로직
+## F. 매매 체결 로직 (MARKET / LIMIT)
 
+### F-1. MARKET (시장가) — 즉시 체결
 ```
-POST /trades { symbol, side, quantity }
+POST /trades { symbol, side, quantity, orderType: 'MARKET' }
   1. JWT → user_id
-  2. price = await kis.getQuote(symbol)        // 실패 502
-  3. supabase.rpc('execute_trade', { ... })
+  2. price = await kis.getQuote(symbol)             // 실패 502 QUOTE_UNAVAILABLE
+  3. supabase.rpc('execute_trade', {
+       p_user_id, p_symbol, p_side, p_quantity,
+       p_price: <quote>, p_order_type: 'MARKET',
+       p_pending_id: null
+     })
        plpgsql 내부 단일 트랜잭션:
          LOCK accounts FOR UPDATE
-         BUY:  cash >= amount 검증 → cash -= amount
+         BUY:  cash >= amount? → cash -= amount
                holdings upsert:
                  new_qty = old_qty + qty
                  new_avg = (old_avg*old_qty + price*qty) / new_qty
-         SELL: holdings.qty >= qty 검증 → cash += amount
+         SELL: holdings.qty >= qty? → cash += amount
                qty == sell_qty 이면 holding 삭제, 아니면 qty 감소(avg_price 유지)
-         INSERT trades
-         RETURN updated holding + cash
+         INSERT trades (order_type='MARKET', pending_order_id=null)
+         RETURN updated holding + account
   4. 응답
 ```
 
-**에러**: `INSUFFICIENT_CASH`, `INSUFFICIENT_QTY`, `QUOTE_UNAVAILABLE` (502). 장 마감 검증은 MVP 제외.
+### F-2. LIMIT (지정가) — 자체 매칭
+```
+POST /trades { symbol, side, quantity, orderType: 'LIMIT', limitPrice }
+  1. JWT → user_id
+  2. limitPrice 검증 (양수, 1주 최소금액 등) → 실패 400 PRICE_INVALID
+  3. (BUY 한정) cash >= quantity * limitPrice 사전 검증 → 부족 시 400
+     (SELL 한정) holdings.qty >= quantity 사전 검증 → 부족 시 400
+     ※ 잠금/원장 변경은 안 함. UX 빠른 실패용 prevalidation.
+  4. INSERT pending_orders (status='OPEN')
+  5. LimitMatcherService에 메모리 등록 (symbol별 인덱스)
+  6. 응답: { pendingOrderId }
 
-## G. 실시간 시세 fan-out
+[비동기 매칭]
+KisWsClient tick → hub.broadcast
+                → LimitMatcherService.match(symbol, tickPrice):
+                    BUY  open 주문 중 limitPrice >= tickPrice
+                    SELL open 주문 중 limitPrice <= tickPrice
+                    FOR UPDATE SKIP LOCKED 후 execute_trade(
+                      ..., p_price: tickPrice, p_order_type: 'LIMIT',
+                      p_pending_id: <pending.id>
+                    )
+                    → pending_orders.status='FILLED', filled_at=now()
+                    → 클라이언트 WS로 'order-filled' 푸시(선택)
+```
+
+### F-3. LIMIT 취소
+```
+DELETE /pending-orders/:id
+  RPC 또는 직접 UPDATE pending_orders SET status='CANCELLED'
+  WHERE id=? AND user_id=? AND status='OPEN'
+  → 매처 메모리 인덱스에서 제거
+```
+
+### F-4. 에러 코드
+
+| code | HTTP | 의미 |
+|---|---|---|
+| `INSUFFICIENT_CASH` | 400 | 잔고 부족 |
+| `INSUFFICIENT_QTY` | 400 | 보유 수량 부족 |
+| `QUOTE_UNAVAILABLE` | 502 | MARKET 시세 조회 실패 |
+| `PRICE_INVALID` | 400 | LIMIT 가격 비정상 |
+| `SYMBOL_INACTIVE` | 400 | 상장폐지 종목 매수 시도 |
+| `ORDER_NOT_FOUND` | 404 | 취소 대상 pending_order 없음 |
+
+장 마감 검증은 MVP 제외(24/7 매칭). 향후 KR 정규장 외 LIMIT 큐잉은 W7+ 검토.
+
+## G. 실시간 시세 fan-out + LIMIT 매칭
 
 ```
 KisWsClient (single connection)
   └─ on('tick') → hub.broadcast(symbol, tick)
+                → LimitMatcherService.match(symbol, tick.price)
 
 WsHub
   clients: Map<clientId, WebSocket>
   subs:    Map<symbol, Set<clientId>>
   broadcast(symbol, tick):
     for cid of subs[symbol]: clients[cid].send({type:'tick', ...})
+
+LimitMatcherService
+  openOrders: Map<symbol, MinHeap<BuyOrder>+MaxHeap<SellOrder>>
+  match(symbol, tickPrice):
+    while top BUY.limitPrice >= tickPrice → 체결(execute_trade)
+    while top SELL.limitPrice <= tickPrice → 체결(execute_trade)
+    FOR UPDATE SKIP LOCKED 로 동시성 보호
 ```
 
-**복구**: KIS WS 끊김 → 지수 백오프(1s→30s) → 재연결 후 `subs` 전체 재구독. 클라이언트 끊김 → 재연결 시 현재 화면 심볼 set 재전송. 30초 ping/pong.
+**복구**: KIS WS 끊김 → 지수 백오프(1s→30s) → 재연결 후 `subs` 전체 재구독.
+**LimitMatcher 부팅**: NestJS 기동 시 `pending_orders WHERE status='OPEN'` 일괄 로드해 메모리 인덱스 재구성.
+클라이언트 끊김 → 재연결 시 현재 화면 심볼 set 재전송. 30초 ping/pong.
 
 ## H. 인증/보안
 
@@ -204,12 +266,12 @@ WsHub
 | 주 | 산출물 |
 |---|---|
 | **W1** | pnpm/turbo 모노레포 + Expo·NestJS 빈 부팅 + `packages/shared` 셋업 |
-| **W2** | **Claude Code 워크플로 셋업** — 프로젝트 `CLAUDE.md`, `.claude/skills/`(`/tickr-screen` 등 커스텀 스킬), `.claude/agents/`(designer 프로젝트 맞춤 설정), Figma Make → designer 검토 워크플로 문서, GitHub Issues/Projects/Milestones/Labels/PR 템플릿 (Jira 대체) |
+| **W2** | **Claude Code 워크플로(harness 파이프라인) 셋업** — 프로젝트 `CLAUDE.md`, `.claude/agents/`(PM·Designer·Architect·Tester·Reviewer·QA·DevOps Tickr 맞춤 override — **Figma 의존성 제거**, RN/NestJS/모노레포 컨텍스트 주입), `.claude/commands/create-pr.md`·`issue-update.md`(gh CLI/GitHub Issue 기반으로 Jira·Bitbucket 대체), NativeWind 디자인 토큰 정의(상승=빨강/하락=파랑 KR 컨벤션), `.github/`(ISSUE/PR 템플릿·라벨·마일스톤). **기능 구현은 harness 파이프라인으로 진행**(PM→Designer→Architect→Tester→Reviewer→QA→DevOps). |
 | **W3** | Supabase Auth (이메일 + Google) + profiles trigger + mobile (auth) flow + NestJS JWT Guard |
 | **W4** | KIS 토큰 캐시 + `/symbols/search` + 마스터 cron + 검색 화면 |
 | **W5** | `/quote/:symbol` REST + `/quote/:symbol/candles?interval=D\|1m` + 종목 상세 + TradingView Lightweight Charts 캔들(WebView 임베드) |
 | **W6** | NestJS WsGateway + WsHub + KisWsClient + 종목 상세 실시간 갱신 + 동적 구독 |
-| **W7** | accounts seed(KRW 1억/USD 100k) + `execute_trade` plpgsql + `POST /trades` + 매수/매도 시트 + 보유종목/거래내역 |
+| **W7** | accounts seed(KRW 1억/USD 100k) + `execute_trade` plpgsql(MARKET/LIMIT 통합) + `pending_orders` 테이블 + `POST /trades`(MARKET/LIMIT 분기) + `DELETE /pending-orders/:id` + LimitMatcherService(WS tick 매칭) + 매수/매도 시트(시장가/지정가 토글) + 보유종목/거래내역/대기주문 |
 | **W8** | 합산 평가금액(실시간) + 국내/해외 분리 뷰 + 에러/빈상태 + EAS Build + TestFlight/Internal Track 업로드 + 화이트리스트 |
 
 ### 2단계 (AI 분석)
@@ -223,12 +285,16 @@ WsHub
 **E2E 시나리오 (1단계 완료 정의)**:
 1. 신규 가입 → 가상현금 1억 KRW seed 확인
 2. 005930 검색 → 상세 진입 → 캔들 + 실시간 현재가 1초 내 갱신
-3. 10주 매수 → 보유종목 표시, avg_price = 체결가, cash 감소
-4. 동일 종목 추가 10주 매수 → 평단가 가중평균 정확 재계산
-5. 5주 매도 → 잔량 15주, cash 증가, 거래내역 BUY×2/SELL×1
+3. **시장가** 10주 매수 → 보유종목 표시, avg_price = 체결가, cash 감소
+4. 동일 종목 추가 시장가 10주 매수 → 평단가 가중평균 정확 재계산
+5. 시장가 5주 매도 → 잔량 15주, cash 증가, 거래내역 BUY×2/SELL×1
+6. **지정가** 매수: 현재가보다 낮은 가격에 10주 지정가 등록 → `pending_orders` OPEN 확인
+7. 지정가 매수 자동 체결: 시세가 지정가 도달 → 자동 체결 + `trades` 추가 + `pending_orders.status='FILLED'`
+8. 지정가 취소: OPEN 상태 주문 취소 → `status='CANCELLED'`, 매처 메모리에서 제거
 
 **단위 테스트 (Jest)**:
 - `trade.service.spec.ts`: 평단가 재계산 4케이스 (초기/추가매수/일부매도/전량매도)
+- `limit-matcher.service.spec.ts`: LIMIT 매칭 4케이스 (BUY 가격 하락 도달 / SELL 가격 상승 도달 / 부분 매칭 / 동시 다수 주문 SKIP LOCKED)
 - `kis-token.cache.spec.ts`: 만료 10분 전 갱신
 - DB 함수: Supabase local + service_role 키로 트랜잭션 시나리오
 
@@ -240,17 +306,24 @@ WsHub
 | KIS REST 한도 (모의 2/s, 실전 20/s) | 활성 심볼은 WS tick 마지막값 캐시 → REST 스킵 |
 | RN 백그라운드 WS 끊김(iOS 30s) | `AppState` active 복귀 시 재연결 + 재구독 |
 | 상장/폐지/티커 변경 | 일일 sync에서 `is_active=false`, 보유분 표시만 허용 매수 차단 |
+| LIMIT 매칭 동시성 | `FOR UPDATE SKIP LOCKED` + symbol별 메모리 인덱스. 부팅 시 OPEN 재로드 |
+| LIMIT 매칭 누락 (NestJS 다운) | OPEN 주문은 DB가 정답 — 재기동 시 메모리 인덱스 재구성. tick 못 받은 동안 도달한 가격은 다음 tick에서 즉시 체결 검증 |
+| LIMIT 무한 적체 (취소되지 않은 OPEN) | MVP는 만료 없음. W8+ 일일 만료 cron 검토(예: 30일 후 자동 취소) |
 | 개인정보처리방침 | Notion 공개 페이지 1장 (TestFlight 심사용 필수) |
 | 시세 데이터 라이선스 | 베타 참가자 사전 고지, 외부 공개 시 재검토 |
+| 향후 web 확장 시 platform 분기 | RN-only 코드를 `apps/mobile/src/shared/lib/`에만 두고, entity/feature/widget 비즈니스 코드는 platform-agnostic 유지 |
 
 ## Critical Files
 
+- `/Users/mz01-zenghyun/Documents/Tickr/.claude/rules/*.md` — 코딩 규칙 (FSD, queryOptions, 토큰, 체결 RPC 등)
 - `/Users/mz01-zenghyun/Documents/Tickr/packages/shared/src/ws-protocol.ts` — WS 프로토콜 단일 출처
-- `/Users/mz01-zenghyun/Documents/Tickr/apps/api/src/trade/trade.service.ts` — 체결 진입점
+- `/Users/mz01-zenghyun/Documents/Tickr/apps/api/src/trade/trade.service.ts` — 체결 진입점 (MARKET 즉시 체결, LIMIT 등록)
+- `/Users/mz01-zenghyun/Documents/Tickr/apps/api/src/trade/limit-matcher.service.ts` — LIMIT 매칭(tick 수신 시)
 - `/Users/mz01-zenghyun/Documents/Tickr/apps/api/src/kis/kis-ws.client.ts` — KIS WS 단일 연결
 - `/Users/mz01-zenghyun/Documents/Tickr/apps/api/src/ws/ws.gateway.ts` — fan-out Hub
-- `/Users/mz01-zenghyun/Documents/Tickr/apps/mobile/src/ws/useTickStream.ts` — 클라이언트 구독 hook
-- `/Users/mz01-zenghyun/Documents/Tickr/supabase/migrations/0001_init.sql` — 테이블 + RLS + `execute_trade()` 함수
+- `/Users/mz01-zenghyun/Documents/Tickr/apps/mobile/src/shared/lib/ws/useTickStream.ts` — 클라이언트 구독 hook (FSD shared)
+- `/Users/mz01-zenghyun/Documents/Tickr/apps/mobile/tailwind.config.js` — NativeWind 디자인 토큰
+- `/Users/mz01-zenghyun/Documents/Tickr/supabase/migrations/0001_init.sql` — 테이블(`accounts/holdings/trades/pending_orders/...`) + RLS + `execute_trade()` 함수
 
 ## 첫날 시작 순서 (Quick Start)
 
