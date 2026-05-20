@@ -1,0 +1,34 @@
+# Tickr GitHub Milestones (W1~W8)
+#
+# 동기화 명령 (gh CLI):
+#   while IFS= read -r line; do
+#     gh api repos/zenghyun/Tickr/milestones -f title="$line" >/dev/null
+#   done < <(yq -r '.[].title' .github/milestones.yml)
+#
+# 또는 한 번에 1줄씩 수동:
+#   gh api repos/zenghyun/Tickr/milestones -f title='W2 Claude Code 워크플로'
+
+- title: "W1 모노레포 셋업"
+  description: "pnpm/turbo + Expo·NestJS 빈 부팅 + packages/shared"
+  state: closed
+
+- title: "W2 Claude Code 워크플로"
+  description: "프로젝트 CLAUDE.md + .claude/rules + .claude/agents 오버라이드 + .github 인프라 + harness 파이프라인 셋업"
+
+- title: "W3 Auth + JWT Guard"
+  description: "Supabase Auth + profiles trigger + mobile auth flow + NestJS Supabase JWT Guard"
+
+- title: "W4 KIS 토큰 + 종목 검색"
+  description: "KIS 토큰 캐시 + /symbols/search + 마스터 cron + 검색 화면"
+
+- title: "W5 현재가 / 캔들 차트"
+  description: "/quote/:symbol REST + 캔들 + TradingView Lightweight Charts WebView 임베드"
+
+- title: "W6 실시간 시세 fan-out"
+  description: "NestJS WsGateway + WsHub + KisWsClient + 동적 구독 + 모바일 실시간 갱신"
+
+- title: "W7 가상매매(시장가/지정가)"
+  description: "accounts seed + execute_trade RPC(MARKET/LIMIT) + pending_orders + LimitMatcher + 매수/매도 시트 + 보유종목/거래내역"
+
+- title: "W8 TestFlight / Internal Track"
+  description: "EAS Build + Submit + 화이트리스트 + 개인정보처리방침 + 합산 평가금액"

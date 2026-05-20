@@ -1,0 +1,65 @@
+name: 작업 (Task)
+description: 일반 개발 작업/기능 단위 (Tickr 로드맵 W1~W8 등)
+title: "[작업] "
+labels: ["task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tickr 작업 등록 템플릿. 한 작업당 하나의 이슈로 분해해 주세요.
+
+  - type: input
+    id: scope
+    attributes:
+      label: 주차 / 스코프
+      description: 어느 주차 또는 어느 영역에 속하는지 (예 W2, FSD, KIS)
+      placeholder: "W3 / Auth / 모바일"
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: 배경 / 왜
+      description: 이 작업이 왜 필요한지 (1~3문장)
+    validations:
+      required: true
+
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: 산출물 / 완료 조건
+      description: |
+        체크리스트로 작성. 완료 시 모두 체크되어야 함.
+      value: |
+        - [ ] 파일/엔드포인트 명시
+        - [ ] 동작 확인 절차
+        - [ ] 관련 규칙(`.claude/rules/*.md`) 준수 확인
+    validations:
+      required: true
+
+  - type: textarea
+    id: refs
+    attributes:
+      label: 참고
+      description: 관련 PLAN.md 절, rules 파일, 외부 문서 등
+      value: |
+        - PLAN.md 절:
+        - rules:
+        - 외부:
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: 리스크 / 의존성
+      description: 선행 작업, 외부 의존(KIS 승인 등), 미해결 질문
+      placeholder: "예) KIS 승인 대기 / 마이그레이션 충돌 가능"
+
+  - type: checkboxes
+    id: pre-flight
+    attributes:
+      label: 시작 전 체크
+      options:
+        - label: 관련 `.claude/rules/*.md`를 확인했다
+        - label: PLAN.md의 해당 절을 확인했다
+        - label: 새 결정이 있다면 PLAN.md에 먼저 반영했다

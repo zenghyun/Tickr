@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: PLAN.md 보기
+    url: https://github.com/zenghyun/Tickr/blob/master/docs/PLAN.md
+    about: 전체 구현 계획 (의사결정 단일 출처)
+  - name: 코딩 규칙
+    url: https://github.com/zenghyun/Tickr/tree/master/.claude/rules
+    about: FSD, queryOptions, NativeWind 토큰 등

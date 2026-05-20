@@ -1,0 +1,49 @@
+name: 기능 제안 (Feature)
+description: 새 기능 아이디어/확장 제안 (스코프 변경 가능성 있음)
+title: "[기능] "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        새 기능 제안. PLAN.md 스코프를 벗어나면 의사결정 우선 → 합의 후 task로 분해.
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: 왜 필요한가
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 제안 내용
+      description: 무엇을, 어떻게 (대략)
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 대안 검토
+      description: 다른 방법은 없는가, 왜 이게 더 나은가
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 영향
+      value: |
+        - 영향 레이어 (mobile/api/shared/supabase):
+        - PLAN.md 영향:
+        - 일정 영향:
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 우선순위
+      options:
+        - "Must"
+        - "Should"
+        - "Could"
+        - "Won't (당장은)"

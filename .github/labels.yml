@@ -1,0 +1,106 @@
+# Tickr GitHub Labels (단일 출처)
+#
+# 동기화:
+#   gh label create  로 1회 생성
+#   또는 https://github.com/marketplace/actions/github-labeler 액션으로 자동 동기화
+#
+# 본 파일을 단일 출처로 두고, 라벨 추가/변경 시 여기 먼저 반영 후 동기화.
+
+# ─── 타입 (이슈 종류) ─────────────────────────────────
+- name: task
+  color: "0E8A16"      # green
+  description: 일반 개발 작업 (로드맵 단위 포함)
+- name: bug
+  color: "D93F0B"      # red
+  description: 의도와 다른 동작
+- name: feature
+  color: "1D76DB"      # blue
+  description: 새 기능 제안
+- name: chore
+  color: "C5DEF5"      # light blue
+  description: 의존성/툴링/스크립트 등 잡일
+- name: docs
+  color: "0075CA"      # blue
+  description: 문서 변경
+- name: refactor
+  color: "FBCA04"      # yellow
+  description: 동작 변경 없는 구조 개선
+
+# ─── 스코프 (영향 영역) ────────────────────────────────
+- name: scope/mobile
+  color: "5319E7"
+  description: apps/mobile
+- name: scope/api
+  color: "5319E7"
+  description: apps/api
+- name: scope/shared
+  color: "5319E7"
+  description: packages/shared
+- name: scope/supabase
+  color: "5319E7"
+  description: supabase 마이그레이션 / RPC
+- name: scope/infra
+  color: "5319E7"
+  description: 모노레포 / CI / 배포
+- name: scope/design
+  color: "5319E7"
+  description: NativeWind 토큰, ui kit, 디자인 일관성
+- name: scope/devx
+  color: "5319E7"
+  description: .claude / rules / agents / harness 워크플로
+
+# ─── 로드맵 (주차) ─────────────────────────────────────
+- name: w1
+  color: "BFD4F2"
+  description: W1 모노레포 셋업 ✅
+- name: w2
+  color: "BFD4F2"
+  description: W2 Claude Code 워크플로 셋업
+- name: w3
+  color: "BFD4F2"
+  description: W3 Auth + JWT Guard
+- name: w4
+  color: "BFD4F2"
+  description: W4 KIS 토큰 + 종목 검색
+- name: w5
+  color: "BFD4F2"
+  description: W5 현재가 / 캔들 차트
+- name: w6
+  color: "BFD4F2"
+  description: W6 WebSocket 실시간 시세 fan-out
+- name: w7
+  color: "BFD4F2"
+  description: W7 가상매매(시장가/지정가) + 보유종목
+- name: w8
+  color: "BFD4F2"
+  description: W8 EAS Build + TestFlight/Internal Track
+
+# ─── 우선순위 ──────────────────────────────────────────
+- name: priority/must
+  color: "B60205"
+  description: 이번 주차 안에 반드시
+- name: priority/should
+  color: "D93F0B"
+  description: 이번 주차 또는 다음 초
+- name: priority/could
+  color: "FBCA04"
+  description: 여유 있을 때
+
+# ─── 상태 ──────────────────────────────────────────────
+- name: status/blocked
+  color: "E11D21"
+  description: 선행 작업 / 외부 의존(KIS 승인 등)으로 진행 불가
+- name: status/in-progress
+  color: "FBCA04"
+  description: 진행 중
+- name: status/ready-for-review
+  color: "0E8A16"
+  description: PR 올라감 / 리뷰 대기
+
+# ─── 메타 ──────────────────────────────────────────────
+- name: legal
+  color: "000000"
+  description: 법적/컴플라이언스 (개인정보처리방침, 면책 등)
+- name: needs-discussion
+  color: "EE0701"
+  description: 결정 전 논의 필요 (PLAN.md 갱신 후 task로 분해)
