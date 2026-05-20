@@ -1,6 +1,8 @@
-// Metro 설정 — pnpm 모노레포 대응
+// Metro 설정 — pnpm 모노레포 + NativeWind v4
 // docs: https://docs.expo.dev/guides/monorepos/
+//       https://www.nativewind.dev/getting-started/expo-router
 const { getDefaultConfig } = require('expo/metro-config');
+const { withNativeWind } = require('nativewind/metro');
 const path = require('path');
 
 const projectRoot = __dirname;
@@ -20,4 +22,4 @@ config.resolver.nodeModulesPaths = [
 // pnpm symlink 안정성을 위해 계층적 검색 비활성화
 config.resolver.disableHierarchicalLookup = true;
 
-module.exports = config;
+module.exports = withNativeWind(config, { input: './global.css' });
