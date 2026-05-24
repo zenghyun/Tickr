@@ -57,6 +57,11 @@ module.exports = {
         // 액션
         primary: '#0A84FF',
         danger: '#FF453A',
+        // 강조(선택/하이라이트) — iOS system green. up(빨강)/down(파랑)과 분리된 의미.
+        highlight: '#34C759',
+
+        // OAuth 브랜드 (로그인 셸 전용 — Google/Kakao 가이드 컬러)
+        kakao: '#FEE500',
       },
       fontFamily: {
         // 가격/등락 텍스트는 tabular-nums 필수
@@ -64,6 +69,9 @@ module.exports = {
         mono: ['Menlo', 'monospace'],
       },
       fontSize: {
+        // brand wordmark (로그인/스플래시 hero용)
+        'display': ['56px', { lineHeight: '64px', fontWeight: '800' }],
+
         // title
         'title-lg': ['28px', { lineHeight: '34px', fontWeight: '700' }],
         'title': ['20px', { lineHeight: '26px', fontWeight: '600' }],

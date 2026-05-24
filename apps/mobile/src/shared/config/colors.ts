@@ -36,4 +36,8 @@ export const colors = {
   // 액션
   primary: '#0A84FF',
   danger: '#FF453A',
+  highlight: '#34C759',
+
+  // OAuth 브랜드
+  kakao: '#FEE500',
 } as const;

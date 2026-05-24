@@ -1,45 +1,48 @@
 // 로그인 화면 배경 마키 컨테이너.
-// - 검정 배경(bg 토큰) 전체 채움.
-// - 회전(-15°) 적용된 컨테이너 안에 2행 MarqueeRow.
-// - useReducedMotion 활성 시 정지 그리드(애니메이션만 중단, 레이아웃 유지).
+// - 회전(-15°) 적용된 컨테이너 안에 4행 MarqueeRow.
+// - 100개 정적 PNG 매니페스트 사용 — 네트워크 미사용, prefetch 불필요, 첫 프레임부터 즉시 표시.
+// - 100개 심볼 → 인덱스 % 4로 4행 분할(KR/US 자연 혼재).
+// - useReducedMotion 활성 시 정지 그리드(애니메이션만 중단).
 // - pointerEvents='none' — 상단 로그인 폼이 터치 받도록.
 // - 접근성: 장식 요소이므로 스크린리더 무시.
+// - 다크/라이트 분기: 배경(`bg-bg` 토큰), 셀 색은 LogoCell이 isDark prop으로 처리.
 import { useMemo } from 'react';
-import { Dimensions, View } from 'react-native';
+import { Dimensions, useColorScheme, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import { MARQUEE_LOGO_SET, type LogoSymbol } from '@/shared/lib/logo';
-import { MARQUEE, ROW_WIDTH } from '../config/marquee.config';
+import { MARQUEE, ROW_SPECS, ROW_WIDTH } from '../config/marquee.config';
 import { MarqueeRow } from './MarqueeRow';
 
 interface LoginLogoMarqueeProps {
   className?: string;
 }
 
-interface SplitRows {
-  row1: readonly LogoSymbol[];
-  row2: readonly LogoSymbol[];
-}
-
 /**
- * 50개 심볼을 2행으로 분할. 행간 시각 분산을 위해 짝수 인덱스/홀수 인덱스로 나눔 —
- * 같은 카테고리(KR/US)가 한 행에 몰리지 않게 자연스럽게 섞임 (KR 14는 인덱스 0~13, US 36은 14~49).
+ * 심볼을 rowCount 행으로 분배. 인덱스 % rowCount 방식 — KR/US가 한 행에 몰리지 않게
+ * 자연스럽게 섞임 (KR 30은 인덱스 0~29, US 70은 30~99).
  */
-const splitToRows = (symbols: readonly LogoSymbol[]): SplitRows => {
-  const evens: LogoSymbol[] = [];
-  const odds: LogoSymbol[] = [];
+const splitToRows = (
+  symbols: readonly LogoSymbol[],
+  rowCount: number,
+): readonly (readonly LogoSymbol[])[] => {
+  const rows: LogoSymbol[][] = Array.from({ length: rowCount }, () => []);
   symbols.forEach((s, i) => {
-    if (i % 2 === 0) evens.push(s);
-    else odds.push(s);
+    const row = rows[i % rowCount];
+    if (row !== undefined) row.push(s);
   });
-  return { row1: evens, row2: odds };
+  return rows;
 };
 
 export const LoginLogoMarquee = ({ className }: LoginLogoMarqueeProps) => {
-  // 마운트 1회만 분할 — 리렌더 시에도 동일 시퀀스(애니메이션 점프 방지)
-  const { row1, row2 } = useMemo(() => splitToRows(MARQUEE_LOGO_SET), []);
+  // 마운트 1회만 분할 + ROW_SPECS와 미리 조합 — 리렌더 시 동일 시퀀스/스타일 보장.
+  const rowItems = useMemo(() => {
+    const splits = splitToRows(MARQUEE_LOGO_SET, ROW_SPECS.length);
+    return ROW_SPECS.map((spec, i) => ({ spec, symbols: splits[i] ?? [] }));
+  }, []);
 
   const reducedMotion = useReducedMotion();
   const paused = reducedMotion === true;
+  const isDark = useColorScheme() === 'dark';
 
   // 화면 크기에 맞춘 컨테이너 폭/높이 — 회전 후 모서리 빈공간 가림
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -49,11 +52,9 @@ export const LoginLogoMarquee = ({ className }: LoginLogoMarqueeProps) => {
   return (
     <View
       pointerEvents="none"
-      // iOS VoiceOver / Android TalkBack 모두 무시 — 장식 요소
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      // 검정 배경(bg 토큰)으로 전체 채움. absolute로 children보다 뒤에 깔림.
-      className={`absolute inset-0 overflow-hidden bg-bg ${className ?? ''}`}
+      className={`absolute inset-0 overflow-hidden ${isDark ? 'bg-bg' : 'bg-bg-light'} ${className ?? ''}`}
     >
       <View
         style={{
@@ -63,26 +64,21 @@ export const LoginLogoMarquee = ({ className }: LoginLogoMarqueeProps) => {
           marginLeft: -(containerWidth - screenWidth) / 2,
           marginTop: -(containerHeight - screenHeight) / 2,
           transform: [{ rotate: `${MARQUEE.ROTATION_DEG}deg` }],
-          // 두 행 사이 간격 — gap-6(=24px)
           gap: MARQUEE.ROW_GAP,
-          // 두 행을 세로로 가운데 정렬
           justifyContent: 'center',
         }}
       >
-        <MarqueeRow
-          symbols={row1}
-          rowWidth={ROW_WIDTH}
-          durationMs={MARQUEE.DURATION_MS.row1}
-          direction="ltr"
-          paused={paused}
-        />
-        <MarqueeRow
-          symbols={row2}
-          rowWidth={ROW_WIDTH}
-          durationMs={MARQUEE.DURATION_MS.row2}
-          direction="rtl"
-          paused={paused}
-        />
+        {rowItems.map(({ spec, symbols }) => (
+          <MarqueeRow
+            key={spec.key}
+            symbols={symbols}
+            rowWidth={ROW_WIDTH}
+            durationMs={spec.durationMs}
+            direction={spec.direction}
+            paused={paused}
+            isDark={isDark}
+          />
+        ))}
       </View>
     </View>
   );

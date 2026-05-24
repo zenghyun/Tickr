@@ -3,7 +3,7 @@
 import { Text as RNText, type TextProps as RNTextProps, useColorScheme } from 'react-native';
 import { cn } from '@/shared/lib';
 
-type Variant = 'title-lg' | 'title' | 'body' | 'caption' | 'price-lg' | 'price' | 'mono-sm';
+type Variant = 'display' | 'title-lg' | 'title' | 'body' | 'caption' | 'price-lg' | 'price' | 'mono-sm';
 type Tone = 'default' | 'muted' | 'disabled' | 'up' | 'down' | 'flat' | 'primary' | 'danger';
 
 interface Props extends RNTextProps {
@@ -18,6 +18,7 @@ interface Props extends RNTextProps {
 
 // variant → tailwind class 매핑
 const variantClass: Record<Variant, string> = {
+  display: 'text-display',
   'title-lg': 'text-title-lg',
   title: 'text-title',
   body: 'text-body',
