@@ -266,13 +266,80 @@ LimitMatcherService
 | 주 | 산출물 |
 |---|---|
 | **W1** | pnpm/turbo 모노레포 + Expo·NestJS 빈 부팅 + `packages/shared` 셋업 |
-| **W2** | **Claude Code 워크플로(harness 파이프라인) 셋업** — 프로젝트 `CLAUDE.md`, `.claude/agents/`(PM·Designer·Architect·Tester·Reviewer·QA·DevOps Tickr 맞춤 override — **Figma 의존성 제거**, RN/NestJS/모노레포 컨텍스트 주입), `.claude/commands/create-pr.md`·`issue-update.md`(gh CLI/GitHub Issue 기반으로 Jira·Bitbucket 대체), NativeWind 디자인 토큰 정의(상승=빨강/하락=파랑 KR 컨벤션), `.github/`(ISSUE/PR 템플릿·라벨·마일스톤). **기능 구현은 harness 파이프라인으로 진행**(PM→Designer→Architect→Tester→Reviewer→QA→DevOps). |
+| **W2** | **Claude Code 워크플로(harness 파이프라인) 셋업** — 프로젝트 `CLAUDE.md`, `.claude/agents/`(PM·Designer·Architect·Tester·Reviewer·QA·DevOps Tickr 맞춤 override — **Figma 의존성 제거**, RN/NestJS/모노레포 컨텍스트 주입), `.claude/commands/create-pr.md`·`issue-update.md`(gh CLI/GitHub Issue 기반으로 Jira·Bitbucket 대체), NativeWind 디자인 토큰 정의(상승=빨강/하락=파랑 KR 컨벤션), `.github/`(ISSUE/PR 템플릿·라벨·마일스톤), lefthook pre-commit(typecheck/lint/rules grep). **외부 키 셋업(W3 진입 차단)**: Supabase 베타 전용 프로젝트(`tickr-beta`, Seoul, Free) 생성 + 루트 `.env`에 `EXPO_PUBLIC_*`/`SUPABASE_*` 채움 + `.env.example` 정합화(이슈 #2). **기능 구현은 harness 파이프라인으로 진행**(PM→Designer→Architect→Tester→Reviewer→QA→DevOps). |
 | **W3** | Supabase Auth (이메일 + Google) + profiles trigger + mobile (auth) flow + NestJS JWT Guard |
 | **W4** | KIS 토큰 캐시 + `/symbols/search` + 마스터 cron + 검색 화면 |
 | **W5** | `/quote/:symbol` REST + `/quote/:symbol/candles?interval=D\|1m` + 종목 상세 + TradingView Lightweight Charts 캔들(WebView 임베드) |
 | **W6** | NestJS WsGateway + WsHub + KisWsClient + 종목 상세 실시간 갱신 + 동적 구독 |
 | **W7** | accounts seed(KRW 1억/USD 100k) + `execute_trade` plpgsql(MARKET/LIMIT 통합) + `pending_orders` 테이블 + `POST /trades`(MARKET/LIMIT 분기) + `DELETE /pending-orders/:id` + LimitMatcherService(WS tick 매칭) + 매수/매도 시트(시장가/지정가 토글) + 보유종목/거래내역/대기주문 |
 | **W8** | 합산 평가금액(실시간) + 국내/해외 분리 뷰 + 에러/빈상태 + EAS Build + TestFlight/Internal Track 업로드 + 화이트리스트 |
+
+### W9 후보 (랭킹 / 리더보드) — 1단계 베타 안정화 후 추가
+
+**목표**: 사용자 간 가벼운 경쟁/비교로 retention 강화. 닫힌 베타 안에서만 동작.
+
+**원칙 (반드시 같이 갈 것)**:
+- **랭킹 기준은 수익률(%) 단일**. 평가금액 총액은 표시만(정렬 기준 X).
+  - 이유: "올인·몰빵" 위험 추구 행동을 줄이고, 추후 시드 충전 정책에도 흔들리지 않음.
+- **시즌제(월 단위) 리셋**: 매월 1일 KST 00:00에 새 `accounts` row 생성, 과거 시즌은 archive. 신규 가입자 위축 방지.
+- **옵트인 공개**: `profiles.show_on_leaderboard boolean default false`. 닉네임 별도 입력, 본명 노출 X.
+- **상금/보상 없음 명시** + 면책 문구 강화: "교육·학습 목적이며 실제 투자가 아닙니다. 상금이나 실제 보상은 일체 없습니다."
+  - 이유: 한국 법상 "투자 수익 경쟁 + 보상" 형태는 유사수신/도박성 판정 위험. 보상이 없고 닫힌 베타면 안전.
+- **Top 100 + 본인 등수**만 표시. 전체 리스트 X(쿼리 비용·심리 부담 ↑).
+- **보유 종목 공개는 별도 토글** (`profiles.show_holdings`) — 더 민감한 정보.
+
+**데이터 모델 변경**:
+```sql
+profiles
+  + nickname            text unique
+  + show_on_leaderboard boolean default false
+  + show_holdings       boolean default false
+
+accounts
+  + season_id           text                 -- '2026-06' 같은 월 키
+  + initial_cash        numeric(20,4)        -- 수익률 계산용 시드 스냅샷
+
+seasons                                       -- 시즌 메타
+  id text primary key                         -- '2026-06'
+  starts_at timestamptz, ends_at timestamptz
+  is_active boolean
+
+leaderboard_mv (materialized view)
+  account_id, user_id, nickname, season_id,
+  return_pct, total_value, rank
+  -- 5분 cron refresh
+```
+
+**계산식**:
+```
+total_value = cash_balance + Σ (holdings.quantity × current_price)
+return_pct  = (total_value - initial_cash) / initial_cash × 100
+```
+
+`current_price`는 WS tick 마지막값 캐시(`symbols_cache` 또는 메모리). 매 tick마다 view refresh X — 5분 단위 cron으로 충분.
+
+**엔드포인트 (예시)**:
+- `GET /leaderboard?season=2026-06` → Top 100 + 본인 등수
+- `GET /leaderboard/me` → 본인 시즌별 history
+- `PATCH /profiles/me` → `nickname`, `show_on_leaderboard`, `show_holdings` 토글
+- `POST /seasons/rollover` (cron 전용) → 매월 1일 새 `accounts` row 생성
+
+**UI**:
+- `pages/leaderboard/LeaderboardPage` — Top 100 리스트(닉네임 + 수익률 + 순위)
+- 본인 카드: "현재 234등 / 1,021명 중, 수익률 +12.3%"
+- 종목 공개 옵트인 사용자: 상세 진입 시 보유종목 비공개(공개 사용자는 익명화된 비중만 표시)
+- 면책 배너 상시 표시: "상금/보상 없음 · 교육 목적"
+
+**위험요소**:
+| 위험 | 대응 |
+|---|---|
+| 위험 추구 행동 유도 | 수익률(%) 단일 기준 + 시즌제 + 보상 없음 명시 |
+| 신규 가입자 위축 | 월 단위 시즌 리셋, "신규 시즌까지 N일" 카운트다운 |
+| 법적/규제 리스크 | 닫힌 베타 + 보상 X + 면책 문구 + 본인 확인 절차 X(가입은 화이트리스트로 충분) |
+| 프라이버시 | 본명 X, 옵트인 디폴트 false, 보유종목 별도 토글 |
+| 시즌 롤오버 정합성 | cron 실패 대비: 매월 1일 첫 tick 처리 시 active season 검증 후 누락분 생성 |
+
+**개발 분량 추정**: 약 1~1.5주(W9 단독).
 
 ### 2단계 (AI 분석)
 - `POST /ai/analyze/:symbol` (OpenAI/Anthropic API 프록시)

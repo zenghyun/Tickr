@@ -43,22 +43,28 @@ KIS_BASE_URL=https://openapivts.koreainvestment.com:29443
 
 **왜 필요한가:** 사용자 인증(이메일/소셜) + Postgres + Row Level Security. 무료 티어로 MVP 충분.
 
+### 프로젝트 분리 원칙 (중요)
+
+- **베타 전용 프로젝트 1개**를 새로 생성한다. 다른 프로젝트(개인 학습/회사용)와 **절대 공유 금지** — 베타 사용자 데이터와 더미 데이터가 섞이면 회수 불가.
+- KIS 환경 매핑: **베타 = `KIS_USE_MOCK=true`(모의)와 1:1**. 실전 KIS로 전환할 때는 별도 Supabase 프로젝트(`tickr-prod` 등)를 새로 만든다.
+- 권장 프로젝트명: `tickr-beta` (자유지만 매핑이 명시적이라 권장)
+
 ### 가입 절차
 1. <https://supabase.com> 회원가입 (GitHub 로그인 권장)
 2. **New Project** 생성:
-   - Name: `tickr` (자유)
-   - Database Password: 강한 비밀번호 (어디 적어두기)
-   - Region: **Northeast Asia (Seoul)** 권장
+   - Name: `tickr-beta` (권장 — 환경 매핑이 명확)
+   - Database Password: 강한 비밀번호 (1Password 등에 백업, 분실 시 복구 불가)
+   - Region: **Northeast Asia (Seoul)** — 한국 사용자 레이턴시
    - Pricing Plan: Free
 3. 프로젝트 생성 완료까지 ~2분 대기
 
 ### 받아야 하는 값 (Settings → API)
-| 필드 | 환경변수 |
-|---|---|
-| Project URL | `SUPABASE_URL` , `EXPO_PUBLIC_SUPABASE_URL` |
-| `anon` `public` key | `SUPABASE_ANON_KEY` , `EXPO_PUBLIC_SUPABASE_ANON_KEY` |
-| `service_role` `secret` key | `SUPABASE_SERVICE_ROLE_KEY` **(서버 전용, 클라이언트 절대 노출 X)** |
-| JWT Settings → JWT Secret | `SUPABASE_JWT_SECRET` |
+| 필드 | 환경변수 | 노출 범위 |
+|---|---|---|
+| Project URL | `SUPABASE_URL` , `EXPO_PUBLIC_SUPABASE_URL` | 서버 + 클라이언트 (동일 값) |
+| `anon` `public` key | `SUPABASE_ANON_KEY` , `EXPO_PUBLIC_SUPABASE_ANON_KEY` | 서버 + 클라이언트 (동일 값) |
+| `service_role` `secret` key | `SUPABASE_SERVICE_ROLE_KEY` | **서버 전용 — 클라이언트 절대 금지** |
+| JWT Settings → JWT Secret | `SUPABASE_JWT_SECRET` | **서버 전용** |
 
 ### `.env` 에 입력할 값
 ```
@@ -71,7 +77,9 @@ EXPO_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
 
-> **주의:** `service_role` 키와 `anon` 키를 구분해서 저장. service_role 키가 클라이언트에 노출되면 RLS 우회가 가능해 모든 사용자 데이터가 공개됩니다.
+> ⚠️ **service_role 키 노출 = 사고.** `EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY` 같은 키는 **절대 만들지 말 것.** 클라이언트 번들에 들어가면 RLS가 전부 무력화되어 모든 사용자 데이터/계좌가 공개된다. 실수로라도 입력했다면 즉시 Supabase 대시보드에서 키 로테이션 + git history 검사.
+>
+> 검증: `grep -E '^EXPO_PUBLIC_.*(SERVICE_ROLE|JWT_SECRET|APP_SECRET)' .env .env.example` 결과 0건이어야 한다.
 
 ---
 

@@ -6,6 +6,13 @@
 
 한국투자증권(KIS) OpenAPI 기반 **모의투자(가상 포트폴리오) 모바일 앱**. 개발자(운영자) KIS 키 1개로 모든 사용자에게 실시간 시세를 fan-out하고, 매매는 자체 가상 잔고로 처리. **닫힌 베타** (TestFlight + Android Internal Track). **앱 우선이지만 향후 `apps/web` 확장 계획 있음** — 모든 설계에서 RN-only API는 격리, 도메인 타입/스키마는 `@tickr/shared`에.
 
+## 현재 진행 상태 (2026-05-24 기준)
+
+- **W1 완료**: 모노레포(pnpm@10 + turbo) 부팅, Expo + NestJS 헬스체크 통과.
+- **W2 완료**: Claude Code 워크플로(PM/DevOps/architect/designer 에이전트, GitHub 기반 create-pr/task-register 스킬), `.claude/rules/*` 정착, `.github/ISSUE_TEMPLATE`, lefthook(pre-commit typecheck/lint/rules grep), `@tickr/shared` 스키마/KIS 타입/WS 프로토콜, `apps/mobile/src/shared/{ui,lib,api,config}` 프리미티브, NativeWind v4 토큰 단일 출처, expo-router `app/_layout.tsx` providers 골격.
+- **W3 진입 직전**: GitHub Issues **#1~#26**에 W3~W8 작업 분해 완료. 다음 작업은 W3 Supabase Auth(`#6/#7/#8/#9`).
+- **미진입**: `apps/api`는 NestJS 보일러플레이트(`app.module.ts/app.controller.ts`)만 존재 — auth/supabase/kis/symbols/quote/trade/ws 모듈 전부 미구현. `apps/mobile/src/{entities,features,widgets,pages}` 폴더도 비어 있음.
+
 ## Rules 디렉터리 (최우선 참조)
 
 파일 작성/수정 시 항상 `.claude/rules/`의 규칙을 먼저 읽고 따른다. 우선순위:
@@ -52,11 +59,16 @@ tickr/
 │   └── shared/        # @tickr/shared  (모노레포 cross-app: zod 스키마, WS 프로토콜, KIS 타입)
 ├── docs/
 │   ├── PLAN.md            # 전체 구현 계획 (W1~W8) — 의사결정 단일 출처
-│   └── SETUP-EXTERNAL.md  # KIS/Supabase/Expo 외부 키 발급 가이드
+│   ├── SETUP-EXTERNAL.md  # KIS/Supabase/Expo 외부 키 발급 가이드
+│   └── work-log/          # 주차별 회고 (예: 2026-05-20 W2 회고)
 ├── .claude/
 │   ├── rules/             # ★ 코딩 규칙 (최우선 참조)
-│   ├── agents/            # Tickr 맞춤 에이전트 override (architect, designer, …)
-│   └── commands/          # 프로젝트별 스킬 (예정)
+│   ├── agents/            # Tickr 맞춤 에이전트 override (pm, devops, architect, designer, …)
+│   └── commands/          # Tickr 맞춤 스킬 (task-register, create-pr)
+├── .github/
+│   ├── ISSUE_TEMPLATE/    # 작업/버그/외부 셋업 이슈 템플릿
+│   └── PULL_REQUEST_TEMPLATE.md
+├── lefthook.yml           # pre-commit: typecheck + lint + rules grep
 └── .env, .env.example     # 모노레포 루트 1개 (apps별로 두지 않음)
 ```
 
@@ -122,7 +134,18 @@ curl http://127.0.0.1:4000/health   # API 헬스 (127.0.0.1 사용)
 
 # packages/shared 변경 시
 pnpm --filter @tickr/shared build   # 또는 dev 모드로 watch
+
+# Git 훅 (lefthook — 최초 1회)
+pnpm prepare          # = lefthook install (pre-commit 활성)
+# 커밋 시 자동: typecheck + lint + .claude/rules grep
 ```
+
+## GitHub Issues 워크플로
+
+- 이슈는 `[작업] W{n}: {scope} — {요약}` 패턴. 현재 #1~#26이 W3~W8 작업으로 분해돼 있음.
+- 새 작업 분해/등록: `/task-register` (PLAN.md + 메모리 + 직전 합의 기반으로 `gh issue create` 일괄).
+- 작업 시작: `#N 분석해줘` → PM 에이전트, 또는 `/harness plan N` → 전체 파이프라인.
+- PR 생성: `/create-pr` (Tickr override — `gh` CLI, 브랜치 prefix로 베이스 결정, `.github/PULL_REQUEST_TEMPLATE.md` 자동 채움, 연관 이슈 링크).
 
 ## 작업 방식
 
@@ -133,21 +156,27 @@ pnpm --filter @tickr/shared build   # 또는 dev 모드로 watch
 5. **한 세션에 1~2 작업 단위만.** 다음 큰 단계로 자동 진행 금지 — 사용자 확인 후 진행.
 6. **기능 구현은 harness 파이프라인.** `/harness plan {ticket}` → PM/Designer/Architect → Gate → Developer/Tester → Reviewer/QA → DevOps.
 
-## 핵심 파일 (생성 예정 포함)
+## 핵심 파일 (✅ 존재 · ⏳ 예정)
 
-| 경로 | 역할 |
-|---|---|
-| `docs/PLAN.md` | 전체 구현 계획 (단일 출처) |
-| `.claude/rules/*.md` | 코딩 규칙 (FSD/queryOptions/토큰/체결 RPC 등) |
-| `packages/shared/src/ws-protocol.ts` | C↔S WebSocket 메시지 타입 단일 출처 |
-| `apps/api/src/trade/trade.service.ts` | 체결 진입점 (`POST /trades`) — MARKET 즉시 체결 |
-| `apps/api/src/trade/limit-matcher.service.ts` | LIMIT 매칭 (tick 수신 시 가격 도달 검사) |
-| `apps/api/src/kis/kis-ws.client.ts` | KIS WS 단일 연결 (재연결/재구독 책임) |
-| `apps/api/src/ws/ws.gateway.ts` | fan-out Hub (`SubscriberMap`) |
-| `apps/mobile/src/shared/lib/ws/useTickStream.ts` | 클라이언트 구독 hook |
-| `apps/mobile/src/entities/{e}/api/{e}.queries.ts` | entity별 queryOptions 팩토리 |
-| `apps/mobile/tailwind.config.js` | NativeWind 디자인 토큰 (단일 출처) |
-| `supabase/migrations/0001_init.sql` | 테이블(`accounts/holdings/trades/pending_orders/...`) + RLS + `execute_trade()` 함수 |
+| 상태 | 경로 | 역할 |
+|---|---|---|
+| ✅ | `docs/PLAN.md` | 전체 구현 계획 (단일 출처) |
+| ✅ | `.claude/rules/*.md` | 코딩 규칙 (FSD/queryOptions/토큰/체결 RPC 등) |
+| ✅ | `packages/shared/src/ws-protocol.ts` | C↔S WebSocket 메시지 타입 단일 출처 |
+| ✅ | `packages/shared/src/schemas/*.ts` | account/holding/trade/pending-order/quote/symbol zod 스키마 |
+| ✅ | `packages/shared/src/kis-types.ts` | KIS REST/WS 응답 타입 |
+| ✅ | `apps/mobile/tailwind.config.js` | NativeWind 디자인 토큰 (단일 출처) |
+| ✅ | `apps/mobile/src/shared/{ui,lib,api,config}/**` | 모바일 프리미티브(Button/Card/Sheet/…), 포매터, axios 클라이언트, query-client |
+| ✅ | `apps/mobile/src/app/providers/QueryProvider.tsx` | react-query Provider |
+| ⏳ | `apps/api/src/auth/**` | Supabase JWT Guard + `/auth/me` (W3) |
+| ⏳ | `apps/api/src/kis/kis-token.service.ts` | KIS 토큰 발급/캐싱 cron (W4) |
+| ⏳ | `apps/api/src/kis/kis-ws.client.ts` | KIS WS 단일 연결 (재연결/재구독 책임) (W6) |
+| ⏳ | `apps/api/src/ws/ws.gateway.ts` | fan-out Hub (`SubscriberMap`) (W6) |
+| ⏳ | `apps/api/src/trade/trade.service.ts` | 체결 진입점 (`POST /trades`) — MARKET 즉시 체결 (W7) |
+| ⏳ | `apps/api/src/trade/limit-matcher.service.ts` | LIMIT 매칭 (tick 수신 시 가격 도달 검사) (W7) |
+| ⏳ | `apps/mobile/src/shared/lib/ws/useTickStream.ts` | 클라이언트 구독 hook (W6) |
+| ⏳ | `apps/mobile/src/entities/{e}/api/{e}.queries.ts` | entity별 queryOptions 팩토리 (W4~W7) |
+| ⏳ | `supabase/migrations/0001_init.sql` | 테이블(`accounts/holdings/trades/pending_orders/...`) + RLS + `execute_trade()` 함수 (W3·W7) |
 
 ## Git / PR
 
