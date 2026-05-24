@@ -53,17 +53,24 @@ pre-commit:
       fail_text: "queryOptions 팩토리 패턴 위반"
 
     no-rn-only-in-entity:
-      # entity/feature/widget/page에서 react-native/expo-* 직접 import 금지
+      # entity/feature/widget/page에서 react-native/expo-*/supabase 등 RN-결합 모듈 직접 import 금지
       # (.claude/rules/monorepo-boundary.md — RN-only 격리)
       # 단, react-native의 view/text 같은 prim은 shared/ui에서만, entity는 shared/ui 경유
+      # shared/lib/** 는 glob 범위 밖이라 자동 제외 — 래퍼 정의 위치
       glob: "apps/mobile/src/{entities,features,widgets,pages}/**/*.{ts,tsx}"
       run: |
-        # entity/feature에서 expo-secure-store/expo-haptics 등 직접 import 검사
-        # (react-native 코어는 일부 허용 — Pressable 등은 entity ui에서 흔히 사용)
+        # expo-* 직접 import 검사 (react-native 코어 Pressable 등은 entity ui에서 허용)
         if grep -nE "from ['\"]expo-(secure-store|haptics|router|web-browser|linking)['\"]" {staged_files} 2>/dev/null; then
           echo ""
           echo "❌ expo-* 모듈을 entity/feature/widget/page에서 직접 import 금지"
           echo "   shared/lib/ 래퍼 경유 (.claude/rules/monorepo-boundary.md)"
+          exit 1
+        fi
+        # @supabase/supabase-js 직접 import 검사 — 항상 shared/lib의 supabase 싱글톤 경유
+        if grep -nE "from ['\"]@supabase/supabase-js['\"]" {staged_files} 2>/dev/null; then
+          echo ""
+          echo "❌ @supabase/supabase-js 직접 import 금지"
+          echo "   '@/shared/lib'의 supabase 싱글톤 사용 (.claude/rules/monorepo-boundary.md)"
           exit 1
         fi
         exit 0

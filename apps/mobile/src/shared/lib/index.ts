@@ -4,3 +4,5 @@ export * from './format';
 export * from './platform';
 export * from './cn';
 export { storage, supabaseStorageAdapter } from './storage';
+export { supabase } from './supabase';
+export type { Session, User, AuthError } from './supabase';
