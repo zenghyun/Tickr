@@ -7,7 +7,7 @@ interface Props {
   className?: string;
 }
 
-export function Skeleton({ className }: Props) {
+export const Skeleton = ({ className }: Props) => {
   const opacity = useRef(new Animated.Value(0.5)).current;
   const isDark = useColorScheme() === 'dark';
 
@@ -32,4 +32,4 @@ export function Skeleton({ className }: Props) {
       )}
     />
   );
-}
+};

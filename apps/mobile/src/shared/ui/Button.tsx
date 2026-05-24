@@ -2,6 +2,7 @@
 // 매수=up, 매도=down (.claude/rules/kr-finance.md)
 import { Pressable, ActivityIndicator, useColorScheme, type PressableProps } from 'react-native';
 import { cn } from '@/shared/lib';
+import { colors } from '@/shared/config';
 import { Text } from './Text';
 
 type Variant = 'primary' | 'up' | 'down' | 'ghost' | 'danger';
@@ -23,7 +24,7 @@ const sizeClass: Record<Size, string> = {
 };
 
 const variantBg = (variant: Variant, isDark: boolean, disabled: boolean): string => {
-  if (disabled) return isDark ? 'bg-surface-2' : 'bg-[#E5E5EA]';
+  if (disabled) return isDark ? 'bg-surface-2' : 'bg-surface-2-light';
   switch (variant) {
     case 'primary':
       return 'bg-primary';
@@ -44,7 +45,7 @@ const variantText = (variant: Variant, isDark: boolean, disabled: boolean) => {
   return 'default' as const;  // 모든 색상 버튼은 흰 텍스트 (배경이 진함)
 };
 
-export function Button({
+export const Button = ({
   label,
   variant = 'primary',
   size = 'md',
@@ -53,7 +54,7 @@ export function Button({
   disabled,
   className,
   ...rest
-}: Props) {
+}: Props) => {
   const isDark = useColorScheme() === 'dark';
   const isDisabled = Boolean(disabled) || loading;
 
@@ -70,7 +71,7 @@ export function Button({
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'ghost' ? undefined : '#FFFFFF'} />
+        <ActivityIndicator color={variant === 'ghost' ? undefined : colors.text.DEFAULT} />
       ) : (
         <Text
           variant={size === 'lg' ? 'title' : 'body'}
@@ -83,4 +84,4 @@ export function Button({
       )}
     </Pressable>
   );
-}
+};

@@ -6,7 +6,7 @@ interface Props extends ViewProps {
   className?: string;
 }
 
-export function Card({ className, ...rest }: Props) {
+export const Card = ({ className, ...rest }: Props) => {
   const isDark = useColorScheme() === 'dark';
   return (
     <View
@@ -18,4 +18,4 @@ export function Card({ className, ...rest }: Props) {
       {...rest}
     />
   );
-}
+};

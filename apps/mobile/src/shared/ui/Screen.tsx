@@ -12,13 +12,13 @@ interface Props extends ViewProps {
   className?: string;
 }
 
-export function Screen({
+export const Screen = ({
   edges = ['top', 'left', 'right'],
   padded = true,
   className,
   children,
   ...rest
-}: Props) {
+}: Props) => {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
@@ -32,4 +32,4 @@ export function Screen({
       </View>
     </SafeAreaView>
   );
-}
+};

@@ -1,6 +1,7 @@
 // 토큰 기반 TextInput 래퍼 — label + helper text 지원
 import { TextInput, View, useColorScheme, type TextInputProps } from 'react-native';
 import { cn } from '@/shared/lib';
+import { colors } from '@/shared/config';
 import { Text } from './Text';
 
 interface Props extends TextInputProps {
@@ -11,7 +12,7 @@ interface Props extends TextInputProps {
   className?: string;
 }
 
-export function Input({
+export const Input = ({
   label,
   helper,
   error,
@@ -19,9 +20,9 @@ export function Input({
   className,
   style,
   ...rest
-}: Props) {
+}: Props) => {
   const isDark = useColorScheme() === 'dark';
-  const placeholderColor = isDark ? '#8E8E93' : '#6B6B70';
+  const placeholderColor = isDark ? colors.text.muted : colors.text['muted-light'];
 
   return (
     <View className={cn('gap-1', containerClassName)}>
@@ -50,4 +51,4 @@ export function Input({
       )}
     </View>
   );
-}
+};

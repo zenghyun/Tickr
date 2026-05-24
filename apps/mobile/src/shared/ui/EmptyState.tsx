@@ -10,7 +10,7 @@ interface Props {
   className?: string;
 }
 
-export function EmptyState({ title, description, action, className }: Props) {
+export const EmptyState = ({ title, description, action, className }: Props) => {
   return (
     <View className={cn('flex-1 items-center justify-center gap-2 px-6 py-10', className)}>
       <Text variant="title" tone="default">
@@ -24,4 +24,4 @@ export function EmptyState({ title, description, action, className }: Props) {
       {action && <View className="mt-4">{action}</View>}
     </View>
   );
-}
+};

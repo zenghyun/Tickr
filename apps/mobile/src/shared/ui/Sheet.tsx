@@ -14,7 +14,7 @@ interface Props {
   className?: string;
 }
 
-export function Sheet({ visible, onClose, children, showHandle = true, className }: Props) {
+export const Sheet = ({ visible, onClose, children, showHandle = true, className }: Props) => {
   const isDark = useColorScheme() === 'dark';
 
   return (
@@ -47,4 +47,4 @@ export function Sheet({ visible, onClose, children, showHandle = true, className
       </Pressable>
     </Modal>
   );
-}
+};

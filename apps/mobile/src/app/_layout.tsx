@@ -6,7 +6,7 @@ import '../../global.css';
 
 import { QueryProvider } from './_providers';
 
-export default function RootLayout() {
+const RootLayout = () => {
   return (
     <SafeAreaProvider>
       <QueryProvider>
@@ -15,4 +15,6 @@ export default function RootLayout() {
       </QueryProvider>
     </SafeAreaProvider>
   );
-}
+};
+
+export default RootLayout;

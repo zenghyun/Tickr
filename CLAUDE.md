@@ -155,6 +155,7 @@ pnpm prepare          # = lefthook install (pre-commit 활성)
 4. **외부 의존(KIS/Supabase) 셋업은 PLAN과 병렬로.** KIS 승인 1~2일 소요 — 코드 작업이 막혔다고 기다리지 말 것.
 5. **한 세션에 1~2 작업 단위만.** 다음 큰 단계로 자동 진행 금지 — 사용자 확인 후 진행.
 6. **기능 구현은 harness 파이프라인.** `/harness plan {ticket}` → PM/Designer/Architect → Gate → Developer/Tester → Reviewer/QA → DevOps.
+7. **커밋 전 self-check.** `git add` 후 `pnpm exec lefthook run pre-commit`를 먼저 실행해 typecheck/lint/rules grep을 통과시킨 뒤 커밋한다. 검사 항목·패턴의 **단일 출처는 `lefthook.yml`** — 패턴을 룰 문서에 복붙하지 말 것(드리프트 방지).
 
 ## 핵심 파일 (✅ 존재 · ⏳ 예정)
 

@@ -49,14 +49,14 @@ const toneClass = (tone: Tone, isDark: boolean): string => {
   }
 };
 
-export function Text({
+export const Text = ({
   variant = 'body',
   tone = 'default',
   tabular = false,
   className,
   style,
   ...rest
-}: Props) {
+}: Props) => {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
@@ -67,4 +67,4 @@ export function Text({
       {...rest}
     />
   );
-}
+};
