@@ -1,5 +1,5 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, View } from 'react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Text, View } from "react-native";
 
 // W3에서 (auth)/(tabs) 라우트 구조로 교체 예정. 현재는 라우트 루트 부팅 확인용 플레이스홀더.
 const HomeRoute = () => {

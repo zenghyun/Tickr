@@ -267,7 +267,7 @@ LimitMatcherService
 |---|---|
 | **W1** | pnpm/turbo 모노레포 + Expo·NestJS 빈 부팅 + `packages/shared` 셋업 |
 | **W2** | **Claude Code 워크플로(harness 파이프라인) 셋업** — 프로젝트 `CLAUDE.md`, `.claude/agents/`(PM·Designer·Architect·Tester·Reviewer·QA·DevOps Tickr 맞춤 override — **Figma 의존성 제거**, RN/NestJS/모노레포 컨텍스트 주입), `.claude/commands/create-pr.md`·`issue-update.md`(gh CLI/GitHub Issue 기반으로 Jira·Bitbucket 대체), NativeWind 디자인 토큰 정의(상승=빨강/하락=파랑 KR 컨벤션), `.github/`(ISSUE/PR 템플릿·라벨·마일스톤), lefthook pre-commit(typecheck/lint/rules grep). **외부 키 셋업(W3 진입 차단)**: Supabase 베타 전용 프로젝트(`tickr-beta`, Seoul, Free) 생성 + 루트 `.env`에 `EXPO_PUBLIC_*`/`SUPABASE_*` 채움 + `.env.example` 정합화(이슈 #2). **기능 구현은 harness 파이프라인으로 진행**(PM→Designer→Architect→Tester→Reviewer→QA→DevOps). |
-| **W3** | Supabase Auth (Google + Kakao OAuth, **이메일 가입 미사용**) + profiles trigger(`handle_new_user`: KRW 1억/USD 0 seed) + accounts 다국 통화 컬럼(`cash_balance_krw` + `cash_balance_usd`) + display_currency(profiles) + mobile (auth) flow + NestJS JWT Guard |
+| **W3** | Supabase Auth (**이메일/비번 + Google + Kakao OAuth** 3종 — 이메일/비번은 베타 테스터 운영자 발급 및 자체 가입 폼 양쪽 모두 사용) + profiles trigger(`handle_new_user`: KRW 1억/USD 0 seed, coalesce 체인이 OAuth/이메일 경로 모두 흡수) + accounts 다국 통화 컬럼(`cash_balance_krw` + `cash_balance_usd`) + display_currency(profiles) + mobile (auth) flow(이메일/비번 폼 RHF+zod + OAuth 버튼 2개) + NestJS JWT Guard |
 | **W4** | KIS 토큰 캐시 + `/symbols/search` + 마스터 cron + 검색 화면 |
 | **W5** | `/quote/:symbol` REST + `/quote/:symbol/candles?interval=D\|1m` + 종목 상세 + TradingView Lightweight Charts 캔들(WebView 임베드) |
 | **W6** | NestJS WsGateway + WsHub + KisWsClient + 종목 상세 실시간 갱신 + 동적 구독 |

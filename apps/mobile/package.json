@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "expo start",
+    "dev": "expo start --ios",
+    "dev:qr": "expo start",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",

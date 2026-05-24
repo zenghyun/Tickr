@@ -110,6 +110,7 @@ tickr/
 ### env 변수 분리
 - `.env`는 **모노레포 루트 1개**. apps별로 두지 않음.
 - `apps/api`는 루트 `.env`를 직접 읽음(NestJS `ConfigModule`).
+- `apps/mobile`은 Expo가 각 앱 루트의 `.env`만 읽으므로 **`apps/mobile/.env` → `../../.env` 심볼릭 링크**로 루트 단일 출처 유지. 새 머신에서 최초 1회: `ln -s ../../.env apps/mobile/.env` (둘 다 `.gitignore`로 보호됨).
 - `apps/mobile`은 **`EXPO_PUBLIC_` 접두사가 붙은 변수만** 클라이언트 번들에 노출됨. 비밀키 절대 금지.
 - 키 목록은 `.env.example` 참조 — 새 키 추가 시 반드시 example도 업데이트.
 
@@ -122,10 +123,16 @@ tickr/
 ## 자주 쓰는 커맨드
 
 ```bash
-# 개발 (루트에서)
-pnpm dev              # mobile + api 동시 실행
-pnpm dev:mobile       # Expo만
+# 개발 (모두 루트에서. apps/mobile 에 cd 할 필요 없음)
+pnpm dev              # ★ 메인: mobile(iOS 시뮬레이터 자동) + api 4000 동시
+pnpm ios              # mobile만 — iOS 시뮬레이터 자동 부팅 (turbo 우회, Metro 핫키 OK)
+pnpm android          # mobile만 — Android Emulator
+pnpm dev:mobile       # mobile만 (turbo 경유, iOS 자동) — pnpm ios와 결과 동일
 pnpm dev:api          # NestJS만 (포트 4000)
+pnpm mobile:qr        # mobile QR 모드 (iPhone Expo Go로 스캔, 실기기)
+
+# turbo 경유(`dev*`)는 stdin 가로채서 Metro 핫키(r/j/m 등) 동작이 불안정.
+# Metro 핫키 필요 시 `pnpm ios` 사용. api는 별도 터미널 `pnpm dev:api`.
 
 # 검증
 pnpm typecheck        # 전체 워크스페이스 타입체크
