@@ -10,8 +10,9 @@
 
 - **W1 완료**: 모노레포(pnpm@10 + turbo) 부팅, Expo + NestJS 헬스체크 통과.
 - **W2 완료**: Claude Code 워크플로(PM/DevOps/architect/designer 에이전트, GitHub 기반 create-pr/task-register 스킬), `.claude/rules/*` 정착, `.github/ISSUE_TEMPLATE`, lefthook(pre-commit typecheck/lint/rules grep), `@tickr/shared` 스키마/KIS 타입/WS 프로토콜, `apps/mobile/src/shared/{ui,lib,api,config}` 프리미티브, NativeWind v4 토큰 단일 출처, expo-router `app/_layout.tsx` providers 골격.
-- **W3 진입 직전**: GitHub Issues **#1~#26**에 W3~W8 작업 분해 완료. 다음 작업은 W3 Supabase Auth(`#6/#7/#8/#9`).
-- **미진입**: `apps/api`는 NestJS 보일러플레이트(`app.module.ts/app.controller.ts`)만 존재 — auth/supabase/kis/symbols/quote/trade/ws 모듈 전부 미구현. `apps/mobile/src/{entities,features,widgets,pages}` 폴더도 비어 있음.
+- **W3 진행 중**: #8(API JWT Guard)·#5(mobile supabase 클라이언트) 커밋 완료. 다음 #4(마이그레이션)/#6(auth entity)/#7(login·signup)/#9(provider 마운트). GitHub Issues #1~#26에 W3~W8 분해됨.
+- **미진입**: `apps/api`는 auth/supabase 모듈만 존재 — kis/symbols/quote/trade/ws 미구현. `apps/mobile/src/{entities,features,widgets,pages}` 폴더도 비어 있음.
+- **기능 스코프 확장(2026-05-24)**: PLAN.md에 IA(하단 3탭 홈·시장·랭킹 + 헤더 검색·설정, 토스증권 참고)·환전(정식, 무료 FX API)·랭킹(W8 승격)·종목상세 3섹션(차트/내주식/종목정보)·관심목록(시장 탭 세그먼트)·온보딩·로그인 로고 배경(정적) 반영. 단일 출처는 PLAN.md.
 
 ## Rules 디렉터리 (최우선 참조)
 
@@ -176,7 +177,8 @@ pnpm prepare          # = lefthook install (pre-commit 활성)
 | ✅ | `apps/mobile/tailwind.config.js` | NativeWind 디자인 토큰 (단일 출처) |
 | ✅ | `apps/mobile/src/shared/{ui,lib,api,config}/**` | 모바일 프리미티브(Button/Card/Sheet/…), 포매터, axios 클라이언트, query-client |
 | ✅ | `apps/mobile/src/app/providers/QueryProvider.tsx` | react-query Provider |
-| ⏳ | `apps/api/src/auth/**` | Supabase JWT Guard + `/auth/me` (W3) |
+| ✅ | `apps/api/src/auth/**` | Supabase JWT Guard + `/auth/me` (W3, #8) |
+| ✅ | `apps/api/src/supabase/**` | service_role 클라이언트 싱글톤 (#8) |
 | ⏳ | `apps/api/src/kis/kis-token.service.ts` | KIS 토큰 발급/캐싱 cron (W4) |
 | ⏳ | `apps/api/src/kis/kis-ws.client.ts` | KIS WS 단일 연결 (재연결/재구독 책임) (W6) |
 | ⏳ | `apps/api/src/ws/ws.gateway.ts` | fan-out Hub (`SubscriberMap`) (W6) |
@@ -185,6 +187,11 @@ pnpm prepare          # = lefthook install (pre-commit 활성)
 | ⏳ | `apps/mobile/src/shared/lib/ws/useTickStream.ts` | 클라이언트 구독 hook (W6) |
 | ⏳ | `apps/mobile/src/entities/{e}/api/{e}.queries.ts` | entity별 queryOptions 팩토리 (W4~W7) |
 | ⏳ | `supabase/migrations/0001_init.sql` | 테이블(`accounts/holdings/trades/pending_orders/...`) + RLS + `execute_trade()` 함수 (W3·W7) |
+| ⏳ | `apps/mobile/app/(tabs)/_layout.tsx` | 하단 3탭(홈·시장·랭킹) + 공용 헤더(검색·설정) (W3) |
+| ⏳ | `apps/mobile/src/widgets/login-logo-marquee/**` | 로그인 floating 로고 배경(정적 마키) (W3) |
+| ⏳ | `apps/mobile/src/pages/market/**` | 시장 탭(국내/해외·실시간·[전체\|관심] 세그먼트) (W4) |
+| ⏳ | `apps/api/src/fx/**` | 환율 서비스 + `execute_fx_trade` RPC + `POST /fx-trades` (W7) |
+| ⏳ | `apps/mobile/src/pages/{leaderboard,settings,onboarding}/**` | 랭킹·설정(테마/계정삭제)·온보딩 (W8·W3) |
 
 ## Git / PR
 
