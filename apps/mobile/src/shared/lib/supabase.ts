@@ -33,4 +33,4 @@ export const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
 
 // 타입 추론용 재export — 다른 슬라이스가 SupabaseClient 타입을 직접 참조해야 할 때.
 // 인스턴스가 아니라 "타입"만 노출하므로 격리 원칙에 위배되지 않음.
-export type { Session, User, AuthError } from '@supabase/supabase-js';
+export type { Session, User, AuthError, AuthChangeEvent } from '@supabase/supabase-js';

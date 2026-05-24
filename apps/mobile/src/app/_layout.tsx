@@ -4,14 +4,16 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import '../../global.css';
 
-import { QueryProvider } from './_providers';
+import { AuthProvider, QueryProvider } from './_providers';
 
 const RootLayout = () => {
   return (
     <SafeAreaProvider>
       <QueryProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-        <StatusBar style="auto" />
+        <AuthProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+          <StatusBar style="auto" />
+        </AuthProvider>
       </QueryProvider>
     </SafeAreaProvider>
   );
