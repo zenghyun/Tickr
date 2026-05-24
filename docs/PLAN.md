@@ -51,8 +51,8 @@ FE 개발자(React/Next 경험, RN/BE 경험 없음)가 본인 학습 + 지인 �
 
 | 테이블 | 핵심 컬럼 | RLS |
 |---|---|---|
-| `profiles` | id(uuid=auth.users.id), email, nickname | select/update: id = auth.uid() |
-| `accounts` | id, user_id, currency('KRW'\|'USD'), cash_balance numeric(20,4) | all: user_id = auth.uid() |
+| `profiles` | id(uuid=auth.users.id), email, nickname, is_beta, display_currency('KRW'\|'USD' default 'KRW') | select: id = auth.uid(), update: id = auth.uid() + 컬럼 GRANT(nickname, display_currency만) |
+| `accounts` | user_id(PK=profiles.id), cash_balance_krw numeric(20,4), cash_balance_usd numeric(20,4), updated_at | select: user_id = auth.uid(), mutation: service_role 전용 (default-deny) |
 | `holdings` | id, user_id, symbol, market('KR'\|'US'), quantity, avg_price, UNIQUE(user_id, symbol) | all: user_id = auth.uid() |
 | `trades` | id, user_id, symbol, side('BUY'\|'SELL'), order_type('MARKET'\|'LIMIT'), quantity, price, amount, executed_at, pending_order_id(nullable) | select/insert만, update/delete 금지 |
 | `pending_orders` | id, user_id, symbol, side, quantity, limit_price, status('OPEN'\|'FILLED'\|'CANCELLED'), created_at, filled_at | select: user_id = auth.uid(), insert/update/delete는 service_role |
@@ -267,11 +267,11 @@ LimitMatcherService
 |---|---|
 | **W1** | pnpm/turbo 모노레포 + Expo·NestJS 빈 부팅 + `packages/shared` 셋업 |
 | **W2** | **Claude Code 워크플로(harness 파이프라인) 셋업** — 프로젝트 `CLAUDE.md`, `.claude/agents/`(PM·Designer·Architect·Tester·Reviewer·QA·DevOps Tickr 맞춤 override — **Figma 의존성 제거**, RN/NestJS/모노레포 컨텍스트 주입), `.claude/commands/create-pr.md`·`issue-update.md`(gh CLI/GitHub Issue 기반으로 Jira·Bitbucket 대체), NativeWind 디자인 토큰 정의(상승=빨강/하락=파랑 KR 컨벤션), `.github/`(ISSUE/PR 템플릿·라벨·마일스톤), lefthook pre-commit(typecheck/lint/rules grep). **외부 키 셋업(W3 진입 차단)**: Supabase 베타 전용 프로젝트(`tickr-beta`, Seoul, Free) 생성 + 루트 `.env`에 `EXPO_PUBLIC_*`/`SUPABASE_*` 채움 + `.env.example` 정합화(이슈 #2). **기능 구현은 harness 파이프라인으로 진행**(PM→Designer→Architect→Tester→Reviewer→QA→DevOps). |
-| **W3** | Supabase Auth (이메일 + Google) + profiles trigger + mobile (auth) flow + NestJS JWT Guard |
+| **W3** | Supabase Auth (Google + Kakao OAuth, **이메일 가입 미사용**) + profiles trigger(`handle_new_user`: KRW 1억/USD 0 seed) + accounts 다국 통화 컬럼(`cash_balance_krw` + `cash_balance_usd`) + display_currency(profiles) + mobile (auth) flow + NestJS JWT Guard |
 | **W4** | KIS 토큰 캐시 + `/symbols/search` + 마스터 cron + 검색 화면 |
 | **W5** | `/quote/:symbol` REST + `/quote/:symbol/candles?interval=D\|1m` + 종목 상세 + TradingView Lightweight Charts 캔들(WebView 임베드) |
 | **W6** | NestJS WsGateway + WsHub + KisWsClient + 종목 상세 실시간 갱신 + 동적 구독 |
-| **W7** | accounts seed(KRW 1억/USD 100k) + `execute_trade` plpgsql(MARKET/LIMIT 통합) + `pending_orders` 테이블 + `POST /trades`(MARKET/LIMIT 분기) + `DELETE /pending-orders/:id` + LimitMatcherService(WS tick 매칭) + 매수/매도 시트(시장가/지정가 토글) + 보유종목/거래내역/대기주문 |
+| **W7** | `execute_trade` plpgsql(MARKET/LIMIT 통합, currency 분기로 KRW/USD 잔고 컬럼 차감/증가) + `pending_orders` 테이블 + `POST /trades`(MARKET/LIMIT 분기) + `DELETE /pending-orders/:id` + LimitMatcherService(WS tick 매칭) + 매수/매도 시트(시장가/지정가 토글) + 보유종목/거래내역/대기주문. **환전(fx_trades + execute_fx_trade RPC)은 별도 W5+ 이슈로 분리.** seed는 W3에서 완료(KRW 1억/USD 0). |
 | **W8** | 합산 평가금액(실시간) + 국내/해외 분리 뷰 + 에러/빈상태 + EAS Build + TestFlight/Internal Track 업로드 + 화이트리스트 |
 
 ### W9 후보 (랭킹 / 리더보드) — 1단계 베타 안정화 후 추가
