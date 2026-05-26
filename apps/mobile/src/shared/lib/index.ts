@@ -14,3 +14,4 @@ export {
   AUTH_ERROR_FALLBACK,
   AUTH_ERROR_INVALID_CREDENTIALS,
 } from './auth-error';
+export { hideSplash } from './splash';
