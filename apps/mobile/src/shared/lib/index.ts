@@ -8,3 +8,9 @@ export { supabase } from './supabase';
 export type { Session, User, AuthError, AuthChangeEvent } from './supabase';
 export { router, Redirect, Link } from './navigation';
 export type { Href } from './navigation';
+export {
+  mapAuthError,
+  mapSupabaseAuthError,
+  AUTH_ERROR_FALLBACK,
+  AUTH_ERROR_INVALID_CREDENTIALS,
+} from './auth-error';

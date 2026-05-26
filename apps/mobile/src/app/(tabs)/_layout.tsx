@@ -6,9 +6,12 @@
 // - 탭 활성색은 text 토큰(흰/검) — primary(파랑)는 KR 시장컬러(down=파랑)와 충돌하여 회피 (ADR-3)
 import type { ComponentProps } from "react";
 import { useColorScheme } from "react-native";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { AppHeader, type AppHeaderAction } from "@/widgets/app-header";
+import { authQueries } from "@/entities/auth";
+import { Redirect } from "@/shared/lib";
 import { colors } from "@/shared/config";
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
@@ -26,6 +29,12 @@ const TAB_ICONS: Record<
 
 const TabsLayout = () => {
   const isDark = useColorScheme() === "dark";
+
+  // 세션 가드 (Architect ADR-1: 양방향 가드) — 비로그인 진입 차단 + 로그아웃 cascade.
+  // 딥링크(tickr://(tabs)/market 등)로 직접 진입해도 본 가드가 가로챔.
+  const { data: session, isLoading } = useQuery(authQueries.session());
+  if (isLoading) return null;
+  if (!session) return <Redirect href="/(auth)/login" />;
 
   // 헤더 우측 액션 — 모든 탭 공통
   // typedRoutes 활성: '/search', '/settings' 리터럴이 타입 추론됨

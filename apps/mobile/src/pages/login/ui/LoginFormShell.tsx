@@ -1,21 +1,22 @@
-// 로그인 화면 하단 액션 카드 — 셸(shell) 상태.
-// 실제 OAuth/이메일 인증 로직은 #7(로그인·회원가입)에서 구현 — 본 컴포넌트는 시각 구성과 진입 애니메이션만.
-// 모든 버튼은 임시로 (tabs)로 즉시 진입시켜 다음 화면 검증을 가능하게 함.
+// 로그인 화면 하단 액션 카드 — OAuth / Form 듀얼 모드 토글.
+// .claude/rules/fsd-structure.md — page가 feature(login) 포함, FSD 방향 정상.
 //
-// 진입 시퀀스:
-//   1) 카드 본체 — 700ms 지연 후 아래에서 위로 페이드인
-//   2) 내부 CTA — 150ms 간격 스태거(900/1050/1200ms)로 순차 등장
+// 모드 전환:
+//   - 'oauth' (기본) → Google/Kakao(준비 중 disabled) + "이메일로 시작하기" CTA
+//   - 'form' → RHF LoginForm 인라인. 카드가 콘텐츠 height에 맞춰 위로 확장
+//     (LinearTransition으로 부드러운 height 변화 — TickrTitle 아래까지 자연 확장)
 //
-// OAuth 버튼 레이아웃 (한국 SNS 로그인 일반 컨벤션):
-//   ┌──────────────────────────────────┐
-//   │ [로고]      Xxx으로 로그인      [ ] │   ← 로고 좌측, 라벨 중앙, 우측 동일폭 스페이서
-//   └──────────────────────────────────┘
-//   - Google: 공식 G 로고(다운로드 PNG) + 흰 배경 + 검은 라벨
-//   - Kakao: Ionicons chatbubble(말풍선 심볼) + 카카오 옐로우 배경 + 검은 라벨
-//     (KakaoTalk 워드마크 PNG 외부 다운로드 실패 → 표준 ionicon chatbubble로 시각 매칭)
-//   - 라벨 색은 두 버튼 모두 검정 고정 — 흰/노란 배경에서 가독성, 다크/라이트 모드 무관.
+// OAuth(Google/Kakao)는 별도 이슈로 위임:
+//   - SMS OTP: #43
+//   - Google/Kakao OAuth 활성화: 추후 W3 OAuth 이슈
+//   현재는 시각 유지 + disabled + opacity 톤 다운으로 비활성 상태 표현.
+//
+// 진입 애니메이션 (콜드 스타트):
+//   카드 700ms FadeInUp 지연 → OAuth 버튼 스태거(900/1050/1200ms).
+//   모드 전환 후에는 LinearTransition만 활성 — 스태거 재실행 금지(딜레이 충돌).
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { useState } from "react";
 import {
   Pressable,
   Text as RNText,
@@ -23,11 +24,16 @@ import {
   useColorScheme,
   type ImageSourcePropType,
 } from "react-native";
-import Animated, { FadeInUp } from "react-native-reanimated";
-import { cn, router } from "@/shared/lib";
-import { Button } from "@/shared/ui";
+import Animated, {
+  FadeIn,
+  FadeInUp,
+  FadeOut,
+  LinearTransition,
+} from "react-native-reanimated";
 
-// 56px = shared Button size='lg'(h-14)와 동일 → Google/Kakao/이메일 3버튼 높이 통일.
+import { LoginForm } from "@/features/login";
+import { cn, router } from "@/shared/lib";
+
 const OAUTH_BUTTON_HEIGHT = 38;
 const OAUTH_LOGO_SIZE = 24;
 const OAUTH_LOGO_STYLE = {
@@ -39,13 +45,21 @@ const googleLogo: ImageSourcePropType = require("../../../../assets/oauth/google
 
 type LogoNode =
   | { kind: "image"; source: ImageSourcePropType }
-  | { kind: "ionicon"; name: "chatbubble" };
+  | {
+      kind: "ionicon";
+      name: "chatbubble" | "mail-outline";
+      // 기본 검정. primary(파랑) 배경 같은 진한 배경에서는 흰색으로 override.
+      color?: string;
+    };
 
 interface OAuthButtonProps {
   logo: LogoNode;
   label: string;
   containerClassName: string;
+  // 기본 'text-black'. primary(파랑)/danger(빨강) 등 진한 배경에서는 'text-white' 등으로 override.
+  labelClassName?: string;
   onPress: () => void;
+  disabled?: boolean;
 }
 
 const OAuthLogo = ({ logo }: { logo: LogoNode }) => {
@@ -61,85 +75,125 @@ const OAuthLogo = ({ logo }: { logo: LogoNode }) => {
       />
     );
   }
-  return <Ionicons name={logo.name} size={OAUTH_LOGO_SIZE} color="black" />;
+  return (
+    <Ionicons
+      name={logo.name}
+      size={OAUTH_LOGO_SIZE}
+      color={logo.color ?? "black"}
+    />
+  );
 };
 
 const OAuthButton = ({
   logo,
   label,
   containerClassName,
+  labelClassName,
   onPress,
+  disabled,
 }: OAuthButtonProps) => (
   <Pressable
     accessibilityRole="button"
     accessibilityLabel={label}
+    accessibilityState={{ disabled: Boolean(disabled) }}
+    disabled={disabled}
     onPress={onPress}
-    className={cn("flex-row items-center rounded-lg px-4", containerClassName)}
+    className={cn(
+      "flex-row items-center rounded-lg px-4",
+      containerClassName,
+      disabled && "opacity-50",
+    )}
     style={{ height: OAUTH_BUTTON_HEIGHT }}
   >
     <View style={OAUTH_LOGO_STYLE} className="items-center justify-center">
       <OAuthLogo logo={logo} />
     </View>
     <View className="flex-1 items-center">
-      {/* 라벨 색 검정 고정 — 디자인 컴포넌트(Text)의 mode-aware tone 회피.
-          RN Text + NativeWind className 직접 사용. */}
-      <RNText className="text-body font-medium text-black">{label}</RNText>
+      {/* 라벨 색 — 기본 검정(흰/노란 배경 가독성). 진한 배경(primary 등)은 labelClassName으로 override. */}
+      <RNText
+        className={cn("text-body font-medium", labelClassName ?? "text-black")}
+      >
+        {label}
+      </RNText>
     </View>
-    {/* 라벨을 화면 중앙에 보이도록 우측에 로고 너비만큼 스페이서 */}
     <View style={OAUTH_LOGO_STYLE} />
   </Pressable>
 );
 
+const noop = () => {};
+
 export const LoginFormShell = () => {
   const isDark = useColorScheme() === "dark";
-
-  // #7에서 실제 OAuth/이메일 진입으로 교체. 현재는 셸 검증을 위한 임시 라우팅.
-  const enterAsGuest = () => router.replace("/(tabs)");
+  const [mode, setMode] = useState<"oauth" | "form">("oauth");
 
   return (
     <Animated.View
       entering={FadeInUp.duration(700).delay(700)}
+      layout={LinearTransition.duration(280)}
       className={cn(
         "rounded-xl p-card-p",
-        isDark ? "bg-surface" : "bg-surface-light"
+        isDark ? "bg-surface" : "bg-surface-light",
       )}
     >
-      <Animated.View
-        entering={FadeInUp.duration(500).delay(900)}
-        className="mb-2"
-      >
-        <OAuthButton
-          logo={{ kind: "image", source: googleLogo }}
-          label="Google로 로그인"
-          containerClassName={cn(
-            "border-hairline bg-white",
-            isDark ? "border-border" : "border-border-light"
-          )}
-          onPress={enterAsGuest}
-        />
-      </Animated.View>
+      {mode === "oauth" ? (
+        <Animated.View
+          key="oauth"
+          entering={FadeIn.duration(180)}
+          exiting={FadeOut.duration(120)}
+        >
+          <Animated.View
+            entering={FadeInUp.duration(500).delay(900)}
+            className="mb-2"
+          >
+            <OAuthButton
+              logo={{ kind: "image", source: googleLogo }}
+              label="Google로 로그인 (준비 중)"
+              containerClassName={cn(
+                "border-hairline bg-white",
+                isDark ? "border-border" : "border-border-light",
+              )}
+              onPress={noop}
+              disabled
+            />
+          </Animated.View>
 
-      <Animated.View
-        entering={FadeInUp.duration(500).delay(1050)}
-        className="mb-2"
-      >
-        <OAuthButton
-          logo={{ kind: "ionicon", name: "chatbubble" }}
-          label="카카오로 로그인"
-          containerClassName="bg-kakao"
-          onPress={enterAsGuest}
-        />
-      </Animated.View>
+          <Animated.View
+            entering={FadeInUp.duration(500).delay(1050)}
+            className="mb-2"
+          >
+            <OAuthButton
+              logo={{ kind: "ionicon", name: "chatbubble" }}
+              label="카카오로 로그인 (준비 중)"
+              containerClassName="bg-kakao"
+              onPress={noop}
+              disabled
+            />
+          </Animated.View>
 
-      <Animated.View entering={FadeInUp.duration(500).delay(1200)}>
-        <Button
-          label="이메일로 시작하기"
-          variant="primary"
-          size="md"
-          fullWidth
-          onPress={enterAsGuest}
-        />
-      </Animated.View>
+          <Animated.View entering={FadeInUp.duration(500).delay(1200)}>
+            {/* Google/Kakao와 동일한 OAuthButton 레이아웃 (좌 아이콘 + 중앙 라벨 + 우 스페이서).
+                bg-primary + 흰 텍스트/아이콘. 3버튼 높이 통일(OAUTH_BUTTON_HEIGHT=38). */}
+            <OAuthButton
+              logo={{ kind: "ionicon", name: "mail-outline", color: "white" }}
+              label="이메일로 시작하기"
+              containerClassName="bg-primary"
+              labelClassName="text-white"
+              onPress={() => setMode("form")}
+            />
+          </Animated.View>
+        </Animated.View>
+      ) : (
+        <Animated.View
+          key="form"
+          entering={FadeIn.duration(220).delay(80)}
+          exiting={FadeOut.duration(120)}
+        >
+          <LoginForm
+            onCancel={() => setMode("oauth")}
+            onSignupPress={() => router.push("/(auth)/signup")}
+          />
+        </Animated.View>
+      )}
     </Animated.View>
   );
 };

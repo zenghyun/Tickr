@@ -9,7 +9,7 @@
 import { useEffect } from 'react';
 
 import { queryClient, tokenStorage } from '@/shared/api';
-import { supabase, type AuthChangeEvent, type Session } from '@/shared/lib';
+import { router, supabase, type AuthChangeEvent, type Session } from '@/shared/lib';
 
 import { authQueries } from '../api/auth.queries';
 
@@ -22,8 +22,16 @@ export const useAuthListener = (): void => {
 
         if (event === 'SIGNED_OUT') {
           void tokenStorage.clear();
-          // 전체 캐시 wipe — 이전 사용자의 holdings/trades 등이 다음 로그인까지 남으면 안 됨
+          // 1) 이전 사용자 데이터 wipe — holdings/trades 등이 다음 로그인까지 남으면 안 됨
           queryClient.clear();
+          // 2) auth.session 캐시를 명시적으로 null로 set — (tabs)/_layout 가드의
+          //    useQuery observer가 즉시 null을 받도록.
+          queryClient.setQueryData(authQueries.session().queryKey, null);
+          // 3) 명시적 navigation — settings/search 등 (tabs) underneath 외부에
+          //    push된 화면에서는 (tabs)/_layout 가드의 Redirect가 active stack을
+          //    교체하지 못함(underneath 상태). 모든 active 화면을 (auth)/login으로 강제.
+          //    cold-start 가드 + 본 명시 navigation이 함께 책임.
+          router.replace('/(auth)/login');
           return;
         }
 

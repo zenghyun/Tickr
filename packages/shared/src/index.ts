@@ -14,3 +14,4 @@ export * from './schemas/account';
 export * from './schemas/holding';
 export * from './schemas/trade';
 export * from './schemas/pending-order';
+export * from './schemas/auth';
