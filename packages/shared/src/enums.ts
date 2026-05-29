@@ -21,6 +21,13 @@ export type Market = z.infer<typeof marketSchema>;
 export const currencySchema = z.enum(['KRW', 'USD']);
 export type Currency = z.infer<typeof currencySchema>;
 
+// 거래소
+// KR: KOSPI(유가증권시장), KOSDAQ
+// US: NASDAQ, NYSE
+// (홍콩/일본/AMEX 등 확장 시점에 enum 갱신 + DB check 동시 변경)
+export const exchangeSchema = z.enum(['KOSPI', 'KOSDAQ', 'NASDAQ', 'NYSE']);
+export type Exchange = z.infer<typeof exchangeSchema>;
+
 // 체결 에러 코드 (trade-rpc 규칙과 일치)
 export const tradeErrorCodeSchema = z.enum([
   'INSUFFICIENT_CASH',
