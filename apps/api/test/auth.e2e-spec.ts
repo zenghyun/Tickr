@@ -6,6 +6,9 @@ import { SignJWT } from 'jose';
 import request from 'supertest';
 import { z } from 'zod';
 import { AppModule } from '../src/app.module';
+import { KisTokenCron } from '../src/kis/kis-token.cron';
+import { KisTokenService } from '../src/kis/kis-token.service';
+import { stubKisTokenCron, stubKisTokenService } from './helpers/kis-stubs';
 
 // env는 test/jest.setup.ts(setupFiles)에서 주입됨. 여기서는 동일 값을 참조해 sign 비교용으로만 사용.
 const TEST_SECRET = 'test-secret-1234567890-please-change-in-prod';
@@ -54,7 +57,12 @@ describe('Auth (e2e)', () => {
   beforeAll(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(KisTokenService)
+      .useValue(stubKisTokenService())
+      .overrideProvider(KisTokenCron)
+      .useValue(stubKisTokenCron())
+      .compile();
     app = moduleRef.createNestApplication();
     await app.init();
   });
