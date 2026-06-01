@@ -54,7 +54,9 @@ function parseArgs(argv: readonly string[]): CliArgs {
       const raw = arg.slice('--market='.length);
       const parsed = marketSchema.safeParse(raw);
       if (!parsed.success) {
-        throw new Error(`[args] --market 값은 'KR' 또는 'US'여야 합니다: ${raw}`);
+        throw new Error(
+          `[args] --market 값은 'KR' 또는 'US'여야 합니다: ${raw}`,
+        );
       }
       market = parsed.data;
       continue;

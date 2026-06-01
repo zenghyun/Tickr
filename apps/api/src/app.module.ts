@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { validateEnv } from './config/env.validation';
 import { SupabaseModule } from './supabase/supabase.module';
+import { SymbolsModule } from './symbols/symbols.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { SupabaseModule } from './supabase/supabase.module';
     }),
     SupabaseModule,
     AuthModule,
+    SymbolsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

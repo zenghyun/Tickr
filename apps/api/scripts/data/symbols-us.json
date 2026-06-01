@@ -1,7 +1,7 @@
 [
   {
     "symbol": "AAPL",
-    "nameKo": null,
+    "nameKo": "애플",
     "nameEn": "Apple Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -11,7 +11,7 @@
   },
   {
     "symbol": "MSFT",
-    "nameKo": null,
+    "nameKo": "마이크로소프트",
     "nameEn": "Microsoft Corporation",
     "exchange": "NASDAQ",
     "market": "US",
@@ -21,7 +21,7 @@
   },
   {
     "symbol": "GOOGL",
-    "nameKo": null,
+    "nameKo": "알파벳",
     "nameEn": "Alphabet Inc. Class A",
     "exchange": "NASDAQ",
     "market": "US",
@@ -31,7 +31,7 @@
   },
   {
     "symbol": "AMZN",
-    "nameKo": null,
+    "nameKo": "아마존",
     "nameEn": "Amazon.com, Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -41,7 +41,7 @@
   },
   {
     "symbol": "NVDA",
-    "nameKo": null,
+    "nameKo": "엔비디아",
     "nameEn": "NVIDIA Corporation",
     "exchange": "NASDAQ",
     "market": "US",
@@ -51,7 +51,7 @@
   },
   {
     "symbol": "META",
-    "nameKo": null,
+    "nameKo": "메타 플랫폼스",
     "nameEn": "Meta Platforms, Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -61,7 +61,7 @@
   },
   {
     "symbol": "TSLA",
-    "nameKo": null,
+    "nameKo": "테슬라",
     "nameEn": "Tesla, Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -71,7 +71,7 @@
   },
   {
     "symbol": "AVGO",
-    "nameKo": null,
+    "nameKo": "브로드컴",
     "nameEn": "Broadcom Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -81,7 +81,7 @@
   },
   {
     "symbol": "COST",
-    "nameKo": null,
+    "nameKo": "코스트코",
     "nameEn": "Costco Wholesale Corporation",
     "exchange": "NASDAQ",
     "market": "US",
@@ -91,7 +91,7 @@
   },
   {
     "symbol": "NFLX",
-    "nameKo": null,
+    "nameKo": "넷플릭스",
     "nameEn": "Netflix, Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -101,7 +101,7 @@
   },
   {
     "symbol": "AMD",
-    "nameKo": null,
+    "nameKo": "AMD",
     "nameEn": "Advanced Micro Devices, Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -111,7 +111,7 @@
   },
   {
     "symbol": "ADBE",
-    "nameKo": null,
+    "nameKo": "어도비",
     "nameEn": "Adobe Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -121,7 +121,7 @@
   },
   {
     "symbol": "CSCO",
-    "nameKo": null,
+    "nameKo": "시스코",
     "nameEn": "Cisco Systems, Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -131,7 +131,7 @@
   },
   {
     "symbol": "INTC",
-    "nameKo": null,
+    "nameKo": "인텔",
     "nameEn": "Intel Corporation",
     "exchange": "NASDAQ",
     "market": "US",
@@ -141,7 +141,7 @@
   },
   {
     "symbol": "QCOM",
-    "nameKo": null,
+    "nameKo": "퀄컴",
     "nameEn": "Qualcomm Incorporated",
     "exchange": "NASDAQ",
     "market": "US",
@@ -151,7 +151,7 @@
   },
   {
     "symbol": "AMAT",
-    "nameKo": null,
+    "nameKo": "어플라이드 머티리얼즈",
     "nameEn": "Applied Materials, Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -161,7 +161,7 @@
   },
   {
     "symbol": "PYPL",
-    "nameKo": null,
+    "nameKo": "페이팔",
     "nameEn": "PayPal Holdings, Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -171,7 +171,7 @@
   },
   {
     "symbol": "SBUX",
-    "nameKo": null,
+    "nameKo": "스타벅스",
     "nameEn": "Starbucks Corporation",
     "exchange": "NASDAQ",
     "market": "US",
@@ -181,7 +181,7 @@
   },
   {
     "symbol": "BKNG",
-    "nameKo": null,
+    "nameKo": "부킹 홀딩스",
     "nameEn": "Booking Holdings Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -191,7 +191,7 @@
   },
   {
     "symbol": "MU",
-    "nameKo": null,
+    "nameKo": "마이크론",
     "nameEn": "Micron Technology, Inc.",
     "exchange": "NASDAQ",
     "market": "US",
@@ -201,7 +201,7 @@
   },
   {
     "symbol": "BRK.B",
-    "nameKo": null,
+    "nameKo": "버크셔 해서웨이 B",
     "nameEn": "Berkshire Hathaway Inc. Class B",
     "exchange": "NYSE",
     "market": "US",
@@ -211,7 +211,7 @@
   },
   {
     "symbol": "JPM",
-    "nameKo": null,
+    "nameKo": "JP모건 체이스",
     "nameEn": "JPMorgan Chase & Co.",
     "exchange": "NYSE",
     "market": "US",
@@ -221,7 +221,7 @@
   },
   {
     "symbol": "V",
-    "nameKo": null,
+    "nameKo": "비자",
     "nameEn": "Visa Inc.",
     "exchange": "NYSE",
     "market": "US",
@@ -231,7 +231,7 @@
   },
   {
     "symbol": "JNJ",
-    "nameKo": null,
+    "nameKo": "존슨앤존슨",
     "nameEn": "Johnson & Johnson",
     "exchange": "NYSE",
     "market": "US",
@@ -241,7 +241,7 @@
   },
   {
     "symbol": "WMT",
-    "nameKo": null,
+    "nameKo": "월마트",
     "nameEn": "Walmart Inc.",
     "exchange": "NYSE",
     "market": "US",
@@ -251,7 +251,7 @@
   },
   {
     "symbol": "UNH",
-    "nameKo": null,
+    "nameKo": "유나이티드헬스 그룹",
     "nameEn": "UnitedHealth Group Incorporated",
     "exchange": "NYSE",
     "market": "US",
@@ -261,7 +261,7 @@
   },
   {
     "symbol": "XOM",
-    "nameKo": null,
+    "nameKo": "엑손모빌",
     "nameEn": "Exxon Mobil Corporation",
     "exchange": "NYSE",
     "market": "US",
@@ -271,7 +271,7 @@
   },
   {
     "symbol": "MA",
-    "nameKo": null,
+    "nameKo": "마스터카드",
     "nameEn": "Mastercard Incorporated",
     "exchange": "NYSE",
     "market": "US",
@@ -281,7 +281,7 @@
   },
   {
     "symbol": "HD",
-    "nameKo": null,
+    "nameKo": "홈디포",
     "nameEn": "The Home Depot, Inc.",
     "exchange": "NYSE",
     "market": "US",
@@ -291,7 +291,7 @@
   },
   {
     "symbol": "KO",
-    "nameKo": null,
+    "nameKo": "코카콜라",
     "nameEn": "The Coca-Cola Company",
     "exchange": "NYSE",
     "market": "US",
