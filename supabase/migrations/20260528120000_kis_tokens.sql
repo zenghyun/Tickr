@@ -30,3 +30,8 @@ alter table public.kis_tokens enable row level security;
 
 -- 명시적 권한 회수 — RLS default-deny 외 추가 안전망
 revoke all on public.kis_tokens from anon, authenticated;
+
+-- service_role은 RLS를 우회하지만 PostgreSQL 레벨 grant는 별도 필요.
+-- 누락 시 NestJS(KisTokenService)에서 'permission denied for table kis_tokens' 발생.
+-- (symbols 마이그레이션과 동일 패턴 — Supabase CLI 미경유 수동 적용 시 default privilege가 안 붙음)
+grant all on public.kis_tokens to service_role;

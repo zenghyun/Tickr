@@ -1,6 +1,7 @@
 // Supabase Access Token(JWT) 검증 Guard.
-// HS256 + SUPABASE_JWT_SECRET 대칭 검증. issuer/audience 강제로 다른 프로젝트 토큰 거부.
-// 토큰 본문은 로그에 절대 출력 안 함.
+// alg에 따라 분기: ES256/RS256(신규 비대칭 서명 키) → JWKS 검증,
+//                  HS256(레거시 공유 시크릿)      → SUPABASE_JWT_SECRET 대칭 검증.
+// issuer/audience 강제로 다른 프로젝트 토큰 거부. 토큰 본문은 로그에 절대 출력 안 함.
 import {
   CanActivate,
   ExecutionContext,
@@ -10,7 +11,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
-import { errors as joseErrors, jwtVerify } from 'jose';
+import {
+  createRemoteJWKSet,
+  decodeProtectedHeader,
+  errors as joseErrors,
+  jwtVerify,
+  type JWTVerifyGetKey,
+} from 'jose';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from './auth.types';
 
@@ -20,6 +27,9 @@ export class JwtSupabaseGuard implements CanActivate {
   // jwtVerify는 Uint8Array 요구. 매 요청마다 인코딩하면 GC 부담 — 1회 캐싱.
   private readonly secret: Uint8Array;
   private readonly issuer: string;
+  // 신규 Supabase 프로젝트는 ES256 비대칭 키로 토큰 서명. JWKS endpoint에서
+  // 공개키를 받아 검증 — createRemoteJWKSet이 내부적으로 키 캐시/회전을 처리.
+  private readonly jwks: JWTVerifyGetKey;
 
   constructor(private readonly config: ConfigService<Env, true>) {
     const raw = this.config.get('SUPABASE_JWT_SECRET', { infer: true });
@@ -27,6 +37,9 @@ export class JwtSupabaseGuard implements CanActivate {
     // Supabase JWT iss = `${SUPABASE_URL}/auth/v1`. URL trailing slash 정규화.
     const url = this.config.get('SUPABASE_URL', { infer: true });
     this.issuer = `${url.replace(/\/$/, '')}/auth/v1`;
+    this.jwks = createRemoteJWKSet(
+      new URL(`${this.issuer}/.well-known/jwks.json`),
+    );
   }
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -46,12 +59,21 @@ export class JwtSupabaseGuard implements CanActivate {
     }
 
     try {
-      const { payload } = await jwtVerify(token, this.secret, {
-        algorithms: ['HS256'], // alg=none / 비대칭 위장 차단
+      // 토큰 헤더의 alg로 검증 키를 선택한다.
+      // - ES256/RS256: 비대칭(신규 Supabase 서명 키) → JWKS 공개키
+      // - HS256:       대칭(레거시 공유 시크릿)       → SUPABASE_JWT_SECRET
+      // alg=none / 알 수 없는 alg는 화이트리스트에서 자동 거부.
+      const { alg } = decodeProtectedHeader(token);
+      const isAsymmetric = alg === 'ES256' || alg === 'RS256';
+      const verifyOptions = {
+        algorithms: isAsymmetric ? ['ES256', 'RS256'] : ['HS256'],
         issuer: this.issuer,
         audience: 'authenticated', // Supabase 기본 aud
         clockTolerance: 5, // NTP drift 흡수
-      });
+      };
+      const { payload } = isAsymmetric
+        ? await jwtVerify(token, this.jwks, verifyOptions)
+        : await jwtVerify(token, this.secret, verifyOptions);
 
       // payload.sub는 string | undefined. 타입 가드로 안전 확인 (as 단언 금지).
       if (typeof payload.sub !== 'string') {
