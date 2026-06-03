@@ -14,7 +14,9 @@ export const quoteSchema = z.object({
 export type Quote = z.infer<typeof quoteSchema>;
 
 // 캔들 간격
-export const candleIntervalSchema = z.enum(['1m', '5m', '15m', '1h', '1d']);
+// W5 범위: KIS REST가 직접 제공하는 1분봉(당일)·일봉만 정식 지원.
+// 5m/15m/1h는 1분봉 서버 resample이 필요 → 후속 이슈로 분리(차트 UI는 별도 mobile 이슈).
+export const candleIntervalSchema = z.enum(['1m', '1d']);
 export type CandleInterval = z.infer<typeof candleIntervalSchema>;
 
 // 단일 캔들
