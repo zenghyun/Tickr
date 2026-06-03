@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { validateEnv } from './config/env.validation';
 import { KisModule } from './kis/kis.module';
+import { QuoteModule } from './quote/quote.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { SymbolsModule } from './symbols/symbols.module';
 
@@ -32,6 +33,7 @@ import { SymbolsModule } from './symbols/symbols.module';
     AuthModule,
     KisModule,
     SymbolsModule,
+    QuoteModule,
   ],
   controllers: [AppController],
   providers: [AppService],
