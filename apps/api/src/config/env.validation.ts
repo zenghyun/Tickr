@@ -13,6 +13,16 @@ const EnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
   SUPABASE_JWT_SECRET: z.string().min(20),
   SUPABASE_ANON_KEY: z.string().min(20).optional(),
+
+  // KIS OpenAPI — 서버 전용 비밀 (EXPO_PUBLIC_* 금지)
+  // KIS_USE_MOCK=true(default) → 모의(openapivts:29443), false → 실전(openapi:9443).
+  // baseURL은 KIS_USE_MOCK에서 파생 — env에 두 URL 동시 보관 X (드리프트 방지).
+  KIS_USE_MOCK: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .transform((v) => (typeof v === 'boolean' ? v : v === 'true'))
+    .default(true),
+  KIS_APP_KEY: z.string().min(20),
+  KIS_APP_SECRET: z.string().min(20),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

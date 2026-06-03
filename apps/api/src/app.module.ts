@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'node:path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { validateEnv } from './config/env.validation';
+import { KisModule } from './kis/kis.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { SymbolsModule } from './symbols/symbols.module';
 
@@ -24,8 +26,11 @@ import { SymbolsModule } from './symbols/symbols.module';
       validate: validateEnv,
       cache: true,
     }),
+    // 글로벌 cron 레지스트리 — KisTokenCron + 후속 SymbolsMasterCron 등 공유.
+    ScheduleModule.forRoot(),
     SupabaseModule,
     AuthModule,
+    KisModule,
     SymbolsModule,
   ],
   controllers: [AppController],
