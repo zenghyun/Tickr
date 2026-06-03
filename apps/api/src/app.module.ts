@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { validateEnv } from './config/env.validation';
 import { KisModule } from './kis/kis.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { SymbolsModule } from './symbols/symbols.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SupabaseModule } from './supabase/supabase.module';
     SupabaseModule,
     AuthModule,
     KisModule,
+    SymbolsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

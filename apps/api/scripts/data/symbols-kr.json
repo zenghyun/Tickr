@@ -1,0 +1,302 @@
+[
+  {
+    "symbol": "005930",
+    "nameKo": "삼성전자",
+    "nameEn": "Samsung Electronics",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": "1975-06-11"
+  },
+  {
+    "symbol": "000660",
+    "nameKo": "SK하이닉스",
+    "nameEn": "SK hynix",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": "1996-12-26"
+  },
+  {
+    "symbol": "373220",
+    "nameKo": "LG에너지솔루션",
+    "nameEn": "LG Energy Solution",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": "2022-01-27"
+  },
+  {
+    "symbol": "207940",
+    "nameKo": "삼성바이오로직스",
+    "nameEn": "Samsung Biologics",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": "2016-11-10"
+  },
+  {
+    "symbol": "005380",
+    "nameKo": "현대차",
+    "nameEn": "Hyundai Motor",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": "1974-06-28"
+  },
+  {
+    "symbol": "000270",
+    "nameKo": "기아",
+    "nameEn": "Kia",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": "1973-07-04"
+  },
+  {
+    "symbol": "035420",
+    "nameKo": "NAVER",
+    "nameEn": "NAVER",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": "2002-10-29"
+  },
+  {
+    "symbol": "035720",
+    "nameKo": "카카오",
+    "nameEn": "Kakao",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "005490",
+    "nameKo": "POSCO홀딩스",
+    "nameEn": "POSCO Holdings",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "006400",
+    "nameKo": "삼성SDI",
+    "nameEn": "Samsung SDI",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "068270",
+    "nameKo": "셀트리온",
+    "nameEn": "Celltrion",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "105560",
+    "nameKo": "KB금융",
+    "nameEn": "KB Financial Group",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "055550",
+    "nameKo": "신한지주",
+    "nameEn": "Shinhan Financial Group",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "086790",
+    "nameKo": "하나금융지주",
+    "nameEn": "Hana Financial Group",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "015760",
+    "nameKo": "한국전력",
+    "nameEn": "Korea Electric Power",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "051910",
+    "nameKo": "LG화학",
+    "nameEn": "LG Chem",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "028260",
+    "nameKo": "삼성물산",
+    "nameEn": "Samsung C&T",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "012330",
+    "nameKo": "현대모비스",
+    "nameEn": "Hyundai Mobis",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "010950",
+    "nameKo": "S-Oil",
+    "nameEn": "S-Oil",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "030200",
+    "nameKo": "KT",
+    "nameEn": "KT",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "017670",
+    "nameKo": "SK텔레콤",
+    "nameEn": "SK Telecom",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "259960",
+    "nameKo": "크래프톤",
+    "nameEn": "Krafton",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": "2021-08-10"
+  },
+  {
+    "symbol": "032830",
+    "nameKo": "삼성생명",
+    "nameEn": "Samsung Life Insurance",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "011200",
+    "nameKo": "HMM",
+    "nameEn": "HMM",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "033780",
+    "nameKo": "KT&G",
+    "nameEn": "KT&G",
+    "exchange": "KOSPI",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "247540",
+    "nameKo": "에코프로비엠",
+    "nameEn": "Ecopro BM",
+    "exchange": "KOSDAQ",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "086520",
+    "nameKo": "에코프로",
+    "nameEn": "Ecopro",
+    "exchange": "KOSDAQ",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "196170",
+    "nameKo": "알테오젠",
+    "nameEn": "Alteogen",
+    "exchange": "KOSDAQ",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "058470",
+    "nameKo": "리노공업",
+    "nameEn": "Leeno Industrial",
+    "exchange": "KOSDAQ",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "293490",
+    "nameKo": "카카오게임즈",
+    "nameEn": "Kakao Games",
+    "exchange": "KOSDAQ",
+    "market": "KR",
+    "currency": "KRW",
+    "isActive": true,
+    "listingDate": "2020-09-10"
+  }
+]

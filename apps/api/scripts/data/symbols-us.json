@@ -1,0 +1,302 @@
+[
+  {
+    "symbol": "AAPL",
+    "nameKo": "애플",
+    "nameEn": "Apple Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "1980-12-12"
+  },
+  {
+    "symbol": "MSFT",
+    "nameKo": "마이크로소프트",
+    "nameEn": "Microsoft Corporation",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "1986-03-13"
+  },
+  {
+    "symbol": "GOOGL",
+    "nameKo": "알파벳",
+    "nameEn": "Alphabet Inc. Class A",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "2004-08-19"
+  },
+  {
+    "symbol": "AMZN",
+    "nameKo": "아마존",
+    "nameEn": "Amazon.com, Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "1997-05-15"
+  },
+  {
+    "symbol": "NVDA",
+    "nameKo": "엔비디아",
+    "nameEn": "NVIDIA Corporation",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "1999-01-22"
+  },
+  {
+    "symbol": "META",
+    "nameKo": "메타 플랫폼스",
+    "nameEn": "Meta Platforms, Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "2012-05-18"
+  },
+  {
+    "symbol": "TSLA",
+    "nameKo": "테슬라",
+    "nameEn": "Tesla, Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "2010-06-29"
+  },
+  {
+    "symbol": "AVGO",
+    "nameKo": "브로드컴",
+    "nameEn": "Broadcom Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "COST",
+    "nameKo": "코스트코",
+    "nameEn": "Costco Wholesale Corporation",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "NFLX",
+    "nameKo": "넷플릭스",
+    "nameEn": "Netflix, Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "2002-05-23"
+  },
+  {
+    "symbol": "AMD",
+    "nameKo": "AMD",
+    "nameEn": "Advanced Micro Devices, Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "ADBE",
+    "nameKo": "어도비",
+    "nameEn": "Adobe Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "CSCO",
+    "nameKo": "시스코",
+    "nameEn": "Cisco Systems, Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "INTC",
+    "nameKo": "인텔",
+    "nameEn": "Intel Corporation",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "QCOM",
+    "nameKo": "퀄컴",
+    "nameEn": "Qualcomm Incorporated",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "AMAT",
+    "nameKo": "어플라이드 머티리얼즈",
+    "nameEn": "Applied Materials, Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "PYPL",
+    "nameKo": "페이팔",
+    "nameEn": "PayPal Holdings, Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "2015-07-20"
+  },
+  {
+    "symbol": "SBUX",
+    "nameKo": "스타벅스",
+    "nameEn": "Starbucks Corporation",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "BKNG",
+    "nameKo": "부킹 홀딩스",
+    "nameEn": "Booking Holdings Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "MU",
+    "nameKo": "마이크론",
+    "nameEn": "Micron Technology, Inc.",
+    "exchange": "NASDAQ",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "BRK.B",
+    "nameKo": "버크셔 해서웨이 B",
+    "nameEn": "Berkshire Hathaway Inc. Class B",
+    "exchange": "NYSE",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "JPM",
+    "nameKo": "JP모건 체이스",
+    "nameEn": "JPMorgan Chase & Co.",
+    "exchange": "NYSE",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "V",
+    "nameKo": "비자",
+    "nameEn": "Visa Inc.",
+    "exchange": "NYSE",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "2008-03-19"
+  },
+  {
+    "symbol": "JNJ",
+    "nameKo": "존슨앤존슨",
+    "nameEn": "Johnson & Johnson",
+    "exchange": "NYSE",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "WMT",
+    "nameKo": "월마트",
+    "nameEn": "Walmart Inc.",
+    "exchange": "NYSE",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "UNH",
+    "nameKo": "유나이티드헬스 그룹",
+    "nameEn": "UnitedHealth Group Incorporated",
+    "exchange": "NYSE",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "XOM",
+    "nameKo": "엑손모빌",
+    "nameEn": "Exxon Mobil Corporation",
+    "exchange": "NYSE",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "MA",
+    "nameKo": "마스터카드",
+    "nameEn": "Mastercard Incorporated",
+    "exchange": "NYSE",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": "2006-05-25"
+  },
+  {
+    "symbol": "HD",
+    "nameKo": "홈디포",
+    "nameEn": "The Home Depot, Inc.",
+    "exchange": "NYSE",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  },
+  {
+    "symbol": "KO",
+    "nameKo": "코카콜라",
+    "nameEn": "The Coca-Cola Company",
+    "exchange": "NYSE",
+    "market": "US",
+    "currency": "USD",
+    "isActive": true,
+    "listingDate": null
+  }
+]

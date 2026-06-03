@@ -17,7 +17,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+    "clean": "rm -rf dist .turbo *.tsbuildinfo",
+    "db:import-symbols": "ts-node -P tsconfig.scripts.json --transpile-only scripts/import-symbols.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -28,6 +29,7 @@
     "@supabase/supabase-js": "^2.106.1",
     "@tickr/shared": "workspace:*",
     "axios": "^1.16.1",
+    "dotenv": "^16.4.5",
     "jose": "^5.10.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
