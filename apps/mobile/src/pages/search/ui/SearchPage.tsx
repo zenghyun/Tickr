@@ -1,19 +1,29 @@
-// 검색 페이지 placeholder — Stack 푸시 화면 (뒤로가기 자동)
-// 실제 종목 검색(#13)에서 features/search-symbols 추가 시 본 컴포넌트가 호스트
 import { View } from 'react-native';
-import { Screen, Text } from '@/shared/ui';
+import { Screen } from '@/shared/ui';
+import { SearchInput, SearchResults, useSymbolSearch } from '@/features/search-symbols';
 
 export const SearchPage = () => {
+  const { input, setInput, query, data, isLoading, isError, refetch } = useSymbolSearch();
+
   return (
-    <Screen>
-      <View className="flex-1 items-center justify-center">
-        <Text variant="body" tone="muted">
-          검색
-        </Text>
-        <Text variant="caption" tone="muted" className="mt-2">
-          종목 검색 UI가 들어올 자리
-        </Text>
+    <Screen padded={false} edges={['left', 'right', 'bottom']}>
+      <View className="py-2">
+        <SearchInput
+          value={input}
+          onChangeText={setInput}
+          onClear={() => setInput('')}
+        />
       </View>
+      <SearchResults
+        query={query}
+        data={data}
+        isLoading={isLoading}
+        isError={isError}
+        onSelect={(_symbol) => {
+          // 종목 상세 라우트 미구현 (후속 이슈)
+        }}
+        onRetry={refetch}
+      />
     </Screen>
   );
 };

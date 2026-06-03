@@ -6,7 +6,13 @@ import { SearchPage } from '@/pages/search';
 const SearchRoute = () => {
   return (
     <>
-      <Stack.Screen options={{ headerShown: true, headerTitle: '검색' }} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTitle: '검색',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
       <SearchPage />
     </>
   );
