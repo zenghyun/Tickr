@@ -24,9 +24,11 @@ pre-commit:
     no-hardcoded-colors:
       # apps/mobile/src 영역에서 hex 색상 금지 (.claude/rules/nativewind-tokens.md)
       # 예외: shared/config/colors.ts — RN native props용 토큰 mirror 단일 출처
+      #       widgets/price-chart/lib/lwc-standalone.ts — vendored TradingView LWC(Apache-2.0) 원본
       glob: "apps/mobile/src/**/*.{ts,tsx}"
       exclude:
         - "apps/mobile/src/shared/config/colors\\.ts"
+        - "apps/mobile/src/widgets/price-chart/lib/lwc-standalone\\.ts"
       run: |
         if grep -nE "#[0-9A-Fa-f]{3,8}" {staged_files} 2>/dev/null; then
           echo ""

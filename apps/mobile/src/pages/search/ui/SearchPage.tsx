@@ -1,4 +1,5 @@
 import { View } from 'react-native';
+import { router } from '@/shared/lib';
 import { Screen } from '@/shared/ui';
 import { SearchInput, SearchResults, useSymbolSearch } from '@/features/search-symbols';
 
@@ -19,9 +20,7 @@ export const SearchPage = () => {
         data={data}
         isLoading={isLoading}
         isError={isError}
-        onSelect={(_symbol) => {
-          // 종목 상세 라우트 미구현 (후속 이슈)
-        }}
+        onSelect={(symbol) => router.push(`/symbol/${symbol}`)}
         onRetry={refetch}
       />
     </Screen>
