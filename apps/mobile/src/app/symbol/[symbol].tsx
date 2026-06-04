@@ -3,7 +3,9 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { SymbolDetailPage } from '@/pages/symbol-detail';
 
 const SymbolDetailRoute = () => {
-  const { symbol } = useLocalSearchParams<{ symbol: string }>();
+  // expo-router는 동적 segment가 undefined일 수 있으므로 optional 타입으로.
+  // 부재 분기는 SymbolDetailPage가 EmptyState로 흡수.
+  const { symbol } = useLocalSearchParams<{ symbol?: string }>();
 
   return (
     <>

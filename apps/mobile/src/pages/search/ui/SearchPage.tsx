@@ -20,7 +20,9 @@ export const SearchPage = () => {
         data={data}
         isLoading={isLoading}
         isError={isError}
-        onSelect={(symbol) => router.push(`/symbol/${symbol}`)}
+        onSelect={(symbol) =>
+          router.push({ pathname: '/symbol/[symbol]', params: { symbol } })
+        }
         onRetry={refetch}
       />
     </Screen>
