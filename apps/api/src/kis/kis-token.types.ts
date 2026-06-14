@@ -20,6 +20,16 @@ export const KIS_BASE_URL: Readonly<Record<KisEnv, string>> = {
 } as const;
 
 /**
+ * KIS 실시간 시세 WebSocket URL — KIS_USE_MOCK env에서 파생.
+ * REST(KIS_BASE_URL)와 동일하게 코드 상수로 단일 출처화(드리프트 방지).
+ * 호스트는 모의/실전 공통(ops.koreainvestment.com), 포트만 분리(mock 31000 / live 21000).
+ */
+export const KIS_WS_URL: Readonly<Record<KisEnv, string>> = {
+  mock: 'ws://ops.koreainvestment.com:31000',
+  live: 'ws://ops.koreainvestment.com:21000',
+} as const;
+
+/**
  * KIS 토큰 발급 요청 payload (KIS 공식 문서 기반).
  * POST /oauth2/tokenP, Content-Type: application/json
  */
@@ -27,6 +37,16 @@ export interface KisTokenRequestBody {
   grant_type: 'client_credentials';
   appkey: string;
   appsecret: string;
+}
+
+/**
+ * KIS WS approval_key 발급 요청 payload (KIS 공식 문서 기반).
+ * POST /oauth2/Approval — REST 토큰과 달리 secret 필드명이 `secretkey`다(주의).
+ */
+export interface KisApprovalRequestBody {
+  grant_type: 'client_credentials';
+  appkey: string;
+  secretkey: string;
 }
 
 /**

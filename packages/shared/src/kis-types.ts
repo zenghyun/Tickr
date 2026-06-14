@@ -10,6 +10,13 @@ export interface KisTokenResponse {
   expires_in: number;                   // 초
 }
 
+// WS approval_key 발급 응답 (POST /oauth2/Approval)
+// REST access_token과 별개 — 실시간 WS 인증(구독 메시지 header.approval_key)에 사용.
+// NOTE: approval_key 값 자체는 서버(apps/api) 메모리 전용. 타입만 cross-app 공유.
+export interface KisApprovalResponse {
+  approval_key: string;
+}
+
 // 현재가 조회 응답 (FHKST01010100)
 export interface KisQuoteResponse {
   rt_cd: string;                        // '0' = 성공

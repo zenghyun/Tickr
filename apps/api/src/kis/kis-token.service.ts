@@ -13,8 +13,8 @@
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosError } from 'axios';
-import type { KisTokenResponse } from '@tickr/shared';
+import axios, { AxiosError, type AxiosResponse } from 'axios';
+import type { KisApprovalResponse, KisTokenResponse } from '@tickr/shared';
 import type { Env } from '../config/env.validation';
 import { SupabaseService } from '../supabase/supabase.service';
 import {
@@ -22,6 +22,7 @@ import {
   KIS_EXPIRES_IN_MIN_SEC,
   TOKEN_WINDOW_MS,
   type CachedToken,
+  type KisApprovalRequestBody,
   type KisEnv,
   type KisTokenRequestBody,
   type KisTokenRow,
@@ -40,6 +41,12 @@ export class KisTokenService implements OnModuleInit {
   private readonly logger = new Logger(KisTokenService.name);
   private readonly cache = new Map<KisEnv, CachedToken>();
   private readonly inflight = new Map<KisEnv, Promise<string>>();
+
+  // WS approval_key: REST 토큰과 별개 발급(POST /oauth2/Approval).
+  // 응답에 만료 정보가 없어 세션 단위 장기 유효 — 메모리 캐시만(DB 영속 X).
+  // 재발급은 WS 재연결 반복 실패 시 invalidateApprovalKey()로 강제.
+  private approvalKey: string | null = null;
+  private approvalInflight: Promise<string> | null = null;
 
   // onModuleInit이 부팅 시 1회 세팅. 이후 immutable.
   private env!: KisEnv;
@@ -108,6 +115,34 @@ export class KisTokenService implements OnModuleInit {
   /** 현재 활성 env (로깅/디버깅용) */
   getEnv(): KisEnv {
     return this.env;
+  }
+
+  /**
+   * KIS 실시간 WS 인증용 approval_key 반환 (KisWsClient가 inject).
+   * 메모리 캐시 + single-flight — 동시 호출 시 KIS는 1회만 호출.
+   * REST access_token과 별개이며 WS 구독 메시지 header.approval_key에 사용.
+   */
+  async getApprovalKey(): Promise<string> {
+    if (this.approvalKey) return this.approvalKey;
+    if (this.approvalInflight) return this.approvalInflight;
+
+    this.approvalInflight = this.fetchApprovalKey()
+      .then((key) => {
+        this.approvalKey = key;
+        return key;
+      })
+      .finally(() => {
+        this.approvalInflight = null;
+      });
+    return this.approvalInflight;
+  }
+
+  /**
+   * approval_key 캐시 무효화 — 다음 getApprovalKey()가 재발급.
+   * KIS WS 인증 거부/재연결 반복 실패 시 KisWsClient가 호출.
+   */
+  invalidateApprovalKey(): void {
+    this.approvalKey = null;
   }
 
   // -------------------------------------------------------------------------
@@ -192,6 +227,37 @@ export class KisTokenService implements OnModuleInit {
       },
     );
     return res.data;
+  }
+
+  private async fetchApprovalKey(): Promise<string> {
+    this.logger.log(`approval_key fetch start: env=${this.env}`);
+    const body: KisApprovalRequestBody = {
+      grant_type: 'client_credentials',
+      appkey: this.appKey,
+      secretkey: this.appSecret,
+    };
+    let res: AxiosResponse<KisApprovalResponse>;
+    try {
+      res = await axios.post<KisApprovalResponse>(
+        `${this.baseUrl}/oauth2/Approval`,
+        body,
+        { timeout: 10_000, headers: { 'Content-Type': 'application/json' } },
+      );
+    } catch (err) {
+      this.logger.error(
+        `approval_key fetch fail: env=${this.env} ${this.describeError(err)}`,
+      );
+      throw err;
+    }
+
+    const key = res.data.approval_key;
+    if (!key) {
+      throw new Error(`KIS approval_key empty (env=${this.env})`);
+    }
+    this.logger.log(
+      `approval_key fetch ok: env=${this.env} key=${maskToken(key)}`,
+    );
+    return key;
   }
 
   private async hydrateFromDb(env: KisEnv): Promise<CachedToken | null> {
